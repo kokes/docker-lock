@@ -19,15 +19,9 @@ type ImageDigestUpdater struct {
 // exported methods.
 type IImageDigestUpdater interface {
 	UpdateDigests(
-		images <-chan *parse.Image,
+		images <-chan parse.IImage,
 		done <-chan struct{},
-	) <-chan *UpdatedImage
-}
-
-// UpdatedImage contains an Image with its updated digest.
-type UpdatedImage struct {
-	Image *parse.Image
-	Err   error
+	) <-chan parse.IImage
 }
 
 // NewImageDigestUpdater returns an ImageDigestUpdater after validating its
@@ -46,14 +40,14 @@ func NewImageDigestUpdater(
 // already specify their digests. It updates images with those
 // digests.
 func (i *ImageDigestUpdater) UpdateDigests(
-	images <-chan *parse.Image,
+	images <-chan parse.IImage,
 	done <-chan struct{},
-) <-chan *UpdatedImage {
+) <-chan parse.IImage {
 	if images == nil {
 		return nil
 	}
 
-	updatedImages := make(chan *UpdatedImage)
+	updatedImages := make(chan parse.IImage)
 
 	var waitGroup sync.WaitGroup
 
@@ -70,22 +64,22 @@ func (i *ImageDigestUpdater) UpdateDigests(
 			go func() {
 				defer waitGroup.Done()
 
-				if image.Digest != "" {
+				if image.Err() != nil || image.Digest() != "" {
 					select {
 					case <-done:
-					case updatedImages <- &UpdatedImage{Image: image}:
+					case updatedImages <- image:
 					}
 
 					return
 				}
 
-				wrapper := i.WrapperManager.Wrapper(image.Name)
+				wrapper := i.WrapperManager.Wrapper(image.Name())
 
-				digest, err := wrapper.Digest(image.Name, image.Tag)
+				digest, err := wrapper.Digest(image.Name(), image.Tag())
 				if err != nil {
 					select {
 					case <-done:
-					case updatedImages <- &UpdatedImage{Image: image, Err: err}:
+					case updatedImages <- parse.NewImage(image.Kind(), "", "", "", nil, err):
 					}
 
 					return
@@ -94,13 +88,10 @@ func (i *ImageDigestUpdater) UpdateDigests(
 				select {
 				case <-done:
 					return
-				case updatedImages <- &UpdatedImage{
-					Image: &parse.Image{
-						Name:   image.Name,
-						Tag:    image.Tag,
-						Digest: digest,
-					},
-				}:
+				case updatedImages <- parse.NewImage(
+					image.Kind(), image.Name(), image.Tag(),
+					digest, image.Metadata(), nil,
+				):
 				}
 			}()
 		}

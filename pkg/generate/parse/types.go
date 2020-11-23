@@ -1,10 +1,15 @@
 package parse
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/safe-waters/docker-lock/pkg/generate/collect"
+	"github.com/safe-waters/docker-lock/pkg/kind"
+)
 
 type IImage interface {
-	SetKind(kind string)
-	Kind() string
+	SetKind(kind kind.Kind)
+	Kind() kind.Kind
 	SetName(name string)
 	Name() string
 	SetTag(tag string)
@@ -21,7 +26,7 @@ type IImage interface {
 
 type IImageParser interface {
 	ParseFiles(
-		paths <-chan string,
+		paths <-chan collect.IPath,
 		done <-chan struct{},
 	) <-chan IImage
 }
@@ -29,7 +34,7 @@ type IImageParser interface {
 type IDockerfileImageParser interface {
 	IImageParser
 	ParseFile(
-		path string,
+		path collect.IPath,
 		buildArgs map[string]string,
 		dockerfileImages chan<- IImage,
 		done <-chan struct{},
@@ -40,7 +45,7 @@ type IDockerfileImageParser interface {
 type IComposefileImageParser interface {
 	IImageParser
 	ParseFile(
-		path string,
+		path collect.IPath,
 		composefileImages chan<- IImage,
 		done <-chan struct{},
 		waitGroup *sync.WaitGroup,
@@ -50,7 +55,7 @@ type IComposefileImageParser interface {
 type IKubernetesfileImageParser interface {
 	IImageParser
 	ParseFile(
-		path string,
+		path collect.IPath,
 		kubernetesfileImages chan<- IImage,
 		done <-chan struct{},
 		waitGroup *sync.WaitGroup,

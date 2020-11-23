@@ -3,10 +3,12 @@ package parse
 import (
 	"fmt"
 	"sync"
+
+	"github.com/safe-waters/docker-lock/pkg/kind"
 )
 
 type image struct {
-	kind          string
+	kind          kind.Kind
 	name          string
 	tag           string
 	digest        string
@@ -16,7 +18,7 @@ type image struct {
 }
 
 func NewImage(
-	kind string,
+	kind kind.Kind,
 	name string,
 	tag string,
 	digest string,
@@ -34,11 +36,11 @@ func NewImage(
 	}
 }
 
-func (i *image) SetKind(kind string) {
+func (i *image) SetKind(kind kind.Kind) {
 	i.kind = kind
 }
 
-func (i *image) Kind() string {
+func (i *image) Kind() kind.Kind {
 	return i.kind
 }
 

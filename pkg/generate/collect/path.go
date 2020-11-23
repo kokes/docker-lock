@@ -1,15 +1,27 @@
 package collect
 
+import "github.com/safe-waters/docker-lock/pkg/kind"
+
 type path struct {
-	val string
-	err error
+	kind kind.Kind
+	val  string
+	err  error
 }
 
-func NewPath(val string, err error) IPath {
+func NewPath(kind kind.Kind, val string, err error) IPath {
 	return &path{
-		val: val,
-		err: err,
+		kind: kind,
+		val:  val,
+		err:  err,
 	}
+}
+
+func (p *path) Kind() kind.Kind {
+	return p.kind
+}
+
+func (p *path) SetKind(kind kind.Kind) {
+	p.kind = kind
 }
 
 func (p *path) Path() string {

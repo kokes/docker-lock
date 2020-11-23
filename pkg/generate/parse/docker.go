@@ -8,18 +8,24 @@ import (
 	"sync"
 
 	"github.com/moby/buildkit/frontend/dockerfile/parser"
+	"github.com/safe-waters/docker-lock/pkg/generate/collect"
+	"github.com/safe-waters/docker-lock/pkg/kind"
 )
 
 // dockerfileImageParser extracts image values from Dockerfiles.
-type dockerfileImageParser struct{}
+type dockerfileImageParser struct {
+	kind kind.Kind
+}
 
-func NewDockerfileImageParser() IDockerfileImageParser {
-	return &dockerfileImageParser{}
+func NewDockerfileImageParser(kind kind.Kind) IDockerfileImageParser {
+	return &dockerfileImageParser{
+		kind: kind,
+	}
 }
 
 // ParseFiles reads Dockerfiles to parse all images in FROM instructions.
 func (d *dockerfileImageParser) ParseFiles(
-	paths <-chan string,
+	paths <-chan collect.IPath,
 	done <-chan struct{},
 ) <-chan IImage {
 	if paths == nil {
@@ -53,7 +59,7 @@ func (d *dockerfileImageParser) ParseFiles(
 }
 
 func (d *dockerfileImageParser) ParseFile(
-	path string,
+	path collect.IPath,
 	buildArgs map[string]string,
 	dockerfileImages chan<- IImage,
 	done <-chan struct{},
@@ -61,11 +67,20 @@ func (d *dockerfileImageParser) ParseFile(
 ) {
 	defer waitGroup.Done()
 
-	f, err := os.Open(path)
+	if path.Err() != nil {
+		select {
+		case <-done:
+		case dockerfileImages <- NewImage(d.kind, "", "", "", nil, path.Err()):
+		}
+
+		return
+	}
+
+	f, err := os.Open(path.Path())
 	if err != nil {
 		select {
 		case <-done:
-		case dockerfileImages <- NewImage("Dockerfile", "", "", "", nil, err):
+		case dockerfileImages <- NewImage(d.kind, "", "", "", nil, err):
 		}
 
 		return
@@ -76,7 +91,7 @@ func (d *dockerfileImageParser) ParseFile(
 	if err != nil {
 		select {
 		case <-done:
-		case dockerfileImages <- NewImage("Dockerfile", "", "", "", nil, err):
+		case dockerfileImages <- NewImage(d.kind, "", "", "", nil, err):
 		}
 
 		return
@@ -102,7 +117,7 @@ func (d *dockerfileImageParser) ParseFile(
 
 				select {
 				case <-done:
-				case dockerfileImages <- NewImage("Dockerfile", "", "", "", nil, err):
+				case dockerfileImages <- NewImage(d.kind, "", "", "", nil, err):
 				}
 
 				return
@@ -141,7 +156,7 @@ func (d *dockerfileImageParser) ParseFile(
 
 				select {
 				case <-done:
-				case dockerfileImages <- NewImage("Dockerfile", "", "", "", nil, err):
+				case dockerfileImages <- NewImage(d.kind, "", "", "", nil, err):
 				}
 
 				return
@@ -150,7 +165,7 @@ func (d *dockerfileImageParser) ParseFile(
 			globalContext = false
 
 			if !stages[raw[0]] {
-				image := NewImage("Dockerfile", "", "", "", map[string]interface{}{
+				image := NewImage(d.kind, "", "", "", map[string]interface{}{
 					"position": position,
 					"path":     path,
 				}, nil)

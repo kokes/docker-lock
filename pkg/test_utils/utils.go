@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
+	"github.com/safe-waters/docker-lock/pkg/kind"
 )
 
 func AssertDockerfileImagesEqual(
@@ -198,7 +199,7 @@ func SortComposefileImageParserResults(
 }
 
 func MakeImage(
-	kind string,
+	kind kind.Kind,
 	name string,
 	tag string,
 	digest string,

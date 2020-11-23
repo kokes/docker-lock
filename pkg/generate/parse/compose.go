@@ -11,15 +11,19 @@ import (
 	"github.com/docker/cli/cli/compose/loader"
 	"github.com/docker/cli/cli/compose/types"
 	"github.com/docker/cli/opts"
+	"github.com/safe-waters/docker-lock/pkg/generate/collect"
+	"github.com/safe-waters/docker-lock/pkg/kind"
 )
 
 type composefileImageParser struct {
+	kind                  kind.Kind
 	dockerfileImageParser IDockerfileImageParser
 }
 
 // NewComposefileImageParser returns a composefileImageParser after validating
 // its fields.
 func NewComposefileImageParser(
+	kind kind.Kind,
 	dockerfileImageParser IDockerfileImageParser,
 ) (IComposefileImageParser, error) {
 	if dockerfileImageParser == nil {
@@ -27,13 +31,14 @@ func NewComposefileImageParser(
 	}
 
 	return &composefileImageParser{
+		kind:                  kind,
 		dockerfileImageParser: dockerfileImageParser,
 	}, nil
 }
 
 // ParseFiles reads docker-compose YAML to parse all images.
 func (c *composefileImageParser) ParseFiles(
-	paths <-chan string,
+	paths <-chan collect.IPath,
 	done <-chan struct{},
 ) <-chan IImage {
 	if paths == nil {
@@ -67,18 +72,27 @@ func (c *composefileImageParser) ParseFiles(
 }
 
 func (c *composefileImageParser) ParseFile(
-	path string,
+	path collect.IPath,
 	composefileImages chan<- IImage,
 	done <-chan struct{},
 	waitGroup *sync.WaitGroup,
 ) {
 	defer waitGroup.Done()
 
-	byt, err := ioutil.ReadFile(path)
+	if path.Err() != nil {
+		select {
+		case <-done:
+		case composefileImages <- NewImage(c.kind, "", "", "", nil, path.Err()):
+		}
+
+		return
+	}
+
+	byt, err := ioutil.ReadFile(path.Path())
 	if err != nil {
 		select {
 		case <-done:
-		case composefileImages <- NewImage("Composefile", "", "", "", nil, err):
+		case composefileImages <- NewImage(c.kind, "", "", "", nil, err):
 		}
 
 		return
@@ -88,7 +102,7 @@ func (c *composefileImageParser) ParseFile(
 	if err != nil {
 		select {
 		case <-done:
-		case composefileImages <- NewImage("Composefile", "", "", "", nil, err):
+		case composefileImages <- NewImage(c.kind, "", "", "", nil, err):
 		}
 
 		return
@@ -104,7 +118,7 @@ func (c *composefileImageParser) ParseFile(
 	var envFileVars []string
 
 	if envFileVars, err = opts.ParseEnvFile(
-		filepath.Join(filepath.Dir(path), ".env"),
+		filepath.Join(filepath.Dir(path.Path()), ".env"),
 	); err == nil {
 		for _, envVarStr := range envFileVars {
 			envVarVal := strings.SplitN(envVarStr, "=", 2)
@@ -119,7 +133,7 @@ func (c *composefileImageParser) ParseFile(
 			ConfigFiles: []types.ConfigFile{
 				{
 					Config:   composefileData,
-					Filename: path,
+					Filename: path.Path(),
 				},
 			},
 			// replaces env vars with $ in file
@@ -129,7 +143,7 @@ func (c *composefileImageParser) ParseFile(
 	if err != nil {
 		select {
 		case <-done:
-		case composefileImages <- NewImage("Composefile", "", "", "", nil, err):
+		case composefileImages <- NewImage(c.kind, "", "", "", nil, err):
 		}
 
 		return
@@ -139,7 +153,7 @@ func (c *composefileImageParser) ParseFile(
 		waitGroup.Add(1)
 
 		go c.parseService(
-			serviceConfig, path, envVars, composefileImages, waitGroup, done,
+			serviceConfig, path.Path(), envVars, composefileImages, waitGroup, done,
 		)
 	}
 }
@@ -155,7 +169,7 @@ func (c *composefileImageParser) parseService(
 	defer waitGroup.Done()
 
 	if serviceConfig.Build.Context == "" {
-		image := NewImage("Composefile", "", "", "", map[string]interface{}{
+		image := NewImage(c.kind, "", "", "", map[string]interface{}{
 			"serviceName": serviceConfig.Name,
 			"position":    0,
 			"path":        path,
@@ -190,7 +204,7 @@ func (c *composefileImageParser) parseService(
 			dockerfile = "Dockerfile"
 		}
 
-		dockerfilePath := filepath.Join(context, dockerfile)
+		dockerfilePath := collect.NewPath(c.kind, filepath.Join(context, dockerfile), nil)
 
 		buildArgs := map[string]string{}
 
@@ -220,8 +234,6 @@ func (c *composefileImageParser) parseService(
 	}()
 
 	for dockerfileImage := range dockerfileImages {
-		dockerfileImage.SetKind("Composefile")
-
 		if dockerfileImage.Err() != nil {
 			select {
 			case <-done:

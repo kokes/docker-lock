@@ -6,20 +6,26 @@ import (
 	"io/ioutil"
 	"sync"
 
+	"github.com/safe-waters/docker-lock/pkg/generate/collect"
+	"github.com/safe-waters/docker-lock/pkg/kind"
 	"gopkg.in/yaml.v2"
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
 // kubernetesfileImageParser extracts image values from Kubernetesfiles.
-type kubernetesfileImageParser struct{}
+type kubernetesfileImageParser struct {
+	kind kind.Kind
+}
 
-func NewKubernetesfileImageParser() IKubernetesfileImageParser {
-	return &kubernetesfileImageParser{}
+func NewKubernetesfileImageParser(kind kind.Kind) IKubernetesfileImageParser {
+	return &kubernetesfileImageParser{
+		kind: kind,
+	}
 }
 
 // ParseFiles reads Kubernetesfiles to parse all images.
 func (k *kubernetesfileImageParser) ParseFiles(
-	paths <-chan string,
+	paths <-chan collect.IPath,
 	done <-chan struct{},
 ) <-chan IImage {
 	if paths == nil {
@@ -53,18 +59,27 @@ func (k *kubernetesfileImageParser) ParseFiles(
 }
 
 func (k *kubernetesfileImageParser) ParseFile(
-	path string,
+	path collect.IPath,
 	kubernetesfileImages chan<- IImage,
 	done <-chan struct{},
 	waitGroup *sync.WaitGroup,
 ) {
 	defer waitGroup.Done()
 
-	byt, err := ioutil.ReadFile(path)
+	if path.Err() != nil {
+		select {
+		case <-done:
+		case kubernetesfileImages <- NewImage(k.kind, "", "", "", nil, path.Err()):
+		}
+
+		return
+	}
+
+	byt, err := ioutil.ReadFile(path.Path())
 	if err != nil {
 		select {
 		case <-done:
-		case kubernetesfileImages <- NewImage("Kubernetesfile", "", "", "", nil, err):
+		case kubernetesfileImages <- NewImage(k.kind, "", "", "", nil, err):
 		}
 
 		return
@@ -74,7 +89,7 @@ func (k *kubernetesfileImageParser) ParseFile(
 	if err != nil {
 		select {
 		case <-done:
-		case kubernetesfileImages <- NewImage("Kubernetesfile", "", "", "", nil, err):
+		case kubernetesfileImages <- NewImage(k.kind, "", "", "", nil, err):
 		}
 
 		return
@@ -89,7 +104,7 @@ func (k *kubernetesfileImageParser) ParseFile(
 			if err != io.EOF {
 				select {
 				case <-done:
-				case kubernetesfileImages <- NewImage("Kubernetesfile", "", "", "", nil, err):
+				case kubernetesfileImages <- NewImage(k.kind, "", "", "", nil, err):
 				}
 
 				return
@@ -101,7 +116,7 @@ func (k *kubernetesfileImageParser) ParseFile(
 		waitGroup.Add(1)
 
 		go k.parseDoc(
-			path, doc, kubernetesfileImages, docPosition, done, waitGroup,
+			path.Path(), doc, kubernetesfileImages, docPosition, done, waitGroup,
 		)
 	}
 }
@@ -150,7 +165,7 @@ func (k *kubernetesfileImageParser) parseDocRecursive(
 		}
 
 		if name != "" && imageLine != "" {
-			image := NewImage("Kubernetesfile", "", "", "", map[string]interface{}{
+			image := NewImage(k.kind, "", "", "", map[string]interface{}{
 				"containerName": name,
 				"path":          path,
 				"imagePosition": *imagePosition,

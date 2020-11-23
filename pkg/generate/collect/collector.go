@@ -8,9 +8,12 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"github.com/safe-waters/docker-lock/pkg/kind"
 )
 
 type pathCollector struct {
+	kind            kind.Kind
 	baseDir         string
 	defaultPathVals []string
 	manualPathVals  []string
@@ -20,6 +23,7 @@ type pathCollector struct {
 
 // NewPathCollector returns a pathCollector after validating its fields.
 func NewPathCollector(
+	kind kind.Kind,
 	baseDir string,
 	defaultPathVals []string,
 	manualPathVals []string,
@@ -32,6 +36,7 @@ func NewPathCollector(
 	}
 
 	return &pathCollector{
+		kind:            kind,
 		baseDir:         baseDir,
 		defaultPathVals: defaultPathVals,
 		manualPathVals:  manualPathVals,
@@ -148,7 +153,7 @@ func (p *pathCollector) collectManualPaths(
 		if err := p.validatePath(val); err != nil {
 			select {
 			case <-done:
-			case paths <- NewPath("", err):
+			case paths <- NewPath(p.kind, "", err):
 			}
 
 			return
@@ -157,7 +162,7 @@ func (p *pathCollector) collectManualPaths(
 		select {
 		case <-done:
 			return
-		case paths <- NewPath(val, nil):
+		case paths <- NewPath(p.kind, val, nil):
 		}
 	}
 }
@@ -175,7 +180,7 @@ func (p *pathCollector) collectDefaultPaths(
 		if err := p.validatePath(val); err != nil {
 			select {
 			case <-done:
-			case paths <- NewPath("", err):
+			case paths <- NewPath(p.kind, "", err):
 			}
 
 			return
@@ -185,7 +190,7 @@ func (p *pathCollector) collectDefaultPaths(
 			select {
 			case <-done:
 				return
-			case paths <- NewPath(val, nil):
+			case paths <- NewPath(p.kind, val, nil):
 			}
 		}
 	}
@@ -205,7 +210,7 @@ func (p *pathCollector) collectGlobs(
 		if err != nil {
 			select {
 			case <-done:
-			case pathResults <- NewPath("", err):
+			case pathResults <- NewPath(p.kind, "", err):
 			}
 
 			return
@@ -215,7 +220,7 @@ func (p *pathCollector) collectGlobs(
 			if err := p.validatePath(val); err != nil {
 				select {
 				case <-done:
-				case pathResults <- NewPath("", err):
+				case pathResults <- NewPath(p.kind, "", err):
 				}
 
 				return
@@ -224,7 +229,7 @@ func (p *pathCollector) collectGlobs(
 			select {
 			case <-done:
 				return
-			case pathResults <- NewPath(val, nil):
+			case pathResults <- NewPath(p.kind, val, nil):
 			}
 		}
 	}
@@ -257,7 +262,7 @@ func (p *pathCollector) collectRecursive(
 
 				select {
 				case <-done:
-				case paths <- NewPath(val, nil):
+				case paths <- NewPath(p.kind, val, nil):
 				}
 			}
 
@@ -266,7 +271,7 @@ func (p *pathCollector) collectRecursive(
 	); err != nil {
 		select {
 		case <-done:
-		case paths <- NewPath("", err):
+		case paths <- NewPath(p.kind, "", err):
 		}
 	}
 }

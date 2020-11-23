@@ -17,7 +17,7 @@ func TestKubernetesfileImageParser(t *testing.T) {
 		Name                   string
 		KubernetesfilePaths    []string
 		KubernetesfileContents [][]byte
-		Expected               []*parse.KubernetesfileImage
+		Expected               []parse.IImage
 		ShouldFail             bool
 	}{
 		{
@@ -42,19 +42,19 @@ spec:
     - containerPort: 88
 `),
 			},
-			Expected: []*parse.KubernetesfileImage{
-				{
-					Image:         &parse.Image{Name: "busybox", Tag: "latest"},
-					ImagePosition: 0,
-					ContainerName: "busybox",
-					Path:          "pod.yaml",
-				},
-				{
-					Image:         &parse.Image{Name: "golang", Tag: "latest"},
-					ImagePosition: 1,
-					ContainerName: "golang",
-					Path:          "pod.yaml",
-				},
+			Expected: []parse.IImage{
+				makeImage("Kubernetesfile", "busybox", "latest", "", map[string]interface{}{
+					"path":          "pod.yaml",
+					"docPosition":   0,
+					"imagePosition": 0,
+					"containerName": "busybox",
+				}),
+				makeImage("Kubernetesfile", "golang", "latest", "", map[string]interface{}{
+					"path":          "pod.yaml",
+					"docPosition":   0,
+					"imagePosition": 1,
+					"containerName": "golang",
+				}),
 			},
 		},
 		{
@@ -96,37 +96,31 @@ spec:
     - containerPort: 88
 `),
 			},
-			Expected: []*parse.KubernetesfileImage{
-				{
-					Image:         &parse.Image{Name: "busybox", Tag: "latest"},
-					ImagePosition: 0,
-					ContainerName: "busybox",
-					Path:          "pod.yaml",
-				},
-				{
-					Image:         &parse.Image{Name: "golang", Tag: "latest"},
-					ImagePosition: 1,
-					ContainerName: "golang",
-					Path:          "pod.yaml",
-				},
-				{
-					Image: &parse.Image{
-						Name:   "redis",
-						Tag:    "1.0",
-						Digest: "123",
-					},
-					ImagePosition: 0,
-					DocPosition:   1,
-					ContainerName: "redis",
-					Path:          "pod.yaml",
-				},
-				{
-					Image:         &parse.Image{Name: "bash", Tag: "v1"},
-					ImagePosition: 1,
-					DocPosition:   1,
-					ContainerName: "bash",
-					Path:          "pod.yaml",
-				},
+			Expected: []parse.IImage{
+				makeImage("Kubernetesfile", "busybox", "latest", "", map[string]interface{}{
+					"path":          "pod.yaml",
+					"docPosition":   0,
+					"imagePosition": 0,
+					"containerName": "busybox",
+				}),
+				makeImage("Kubernetesfile", "golang", "latest", "", map[string]interface{}{
+					"path":          "pod.yaml",
+					"docPosition":   0,
+					"imagePosition": 1,
+					"containerName": "golang",
+				}),
+				makeImage("Kubernetesfile", "redis", "1.0", "123", map[string]interface{}{
+					"path":          "pod.yaml",
+					"docPosition":   1,
+					"imagePosition": 0,
+					"containerName": "redis",
+				}),
+				makeImage("Kubernetesfile", "bash", "v1", "", map[string]interface{}{
+					"path":          "pod.yaml",
+					"docPosition":   1,
+					"imagePosition": 1,
+					"containerName": "bash",
+				}),
 			},
 		},
 		{
@@ -170,17 +164,19 @@ spec:
     - containerPort: 80
 `),
 			},
-			Expected: []*parse.KubernetesfileImage{
-				{
-					Image:         &parse.Image{Name: "nginx", Tag: "latest"},
-					ContainerName: "nginx",
-					Path:          "deployment.yaml",
-				},
-				{
-					Image:         &parse.Image{Name: "busybox", Tag: "latest"},
-					ContainerName: "busybox",
-					Path:          "pod.yaml",
-				},
+			Expected: []parse.IImage{
+				makeImage("Kubernetesfile", "nginx", "latest", "", map[string]interface{}{
+					"path":          "deployment.yaml",
+					"docPosition":   0,
+					"imagePosition": 0,
+					"containerName": "nginx",
+				}),
+				makeImage("Kubernetesfile", "busybox", "latest", "", map[string]interface{}{
+					"path":          "pod.yaml",
+					"docPosition":   0,
+					"imagePosition": 0,
+					"containerName": "busybox",
+				}),
 			},
 		},
 	}
@@ -210,25 +206,25 @@ spec:
 
 			done := make(chan struct{})
 
-			kubernetesfileParser := &parse.KubernetesfileImageParser{}
+			kubernetesfileParser := parse.NewKubernetesfileImageParser()
 			kubernetesfileImages := kubernetesfileParser.ParseFiles(
 				pathsToParseCh, done,
 			)
 
-			var got []*parse.KubernetesfileImage
+			var got []parse.IImage
 
 			for kubernetesfileImage := range kubernetesfileImages {
 				if test.ShouldFail {
-					if kubernetesfileImage.Err == nil {
+					if kubernetesfileImage.Err() == nil {
 						t.Fatal("expected error but did not get one")
 					}
 
 					return
 				}
 
-				if kubernetesfileImage.Err != nil {
+				if kubernetesfileImage.Err() != nil {
 					close(done)
-					t.Fatal(kubernetesfileImage.Err)
+					t.Fatal(kubernetesfileImage.Err())
 				}
 
 				got = append(got, kubernetesfileImage)
@@ -236,10 +232,10 @@ spec:
 
 			sortKubernetesfileImageParserResults(t, got)
 
-			for _, dockerfileImage := range test.Expected {
-				dockerfileImage.Path = filepath.Join(
-					tempDir, dockerfileImage.Path,
-				)
+			for _, kubernetesfileImage := range test.Expected {
+				metadata := kubernetesfileImage.Metadata()
+				metadata["path"] = filepath.Join(tempDir, metadata["path"].(string))
+				kubernetesfileImage.SetMetadata(metadata)
 			}
 
 			assertKubernetesfileImagesEqual(t, test.Expected, got)

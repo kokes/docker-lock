@@ -2,7 +2,9 @@ package parse_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -12,99 +14,79 @@ import (
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
 )
 
-type DockerfileImageWithoutStructTags struct {
-	*parse.Image
-	Position int
-	Path     string
-	Err      error
-}
+// type DockerfileImageWithoutStructTags struct {
+// 	*parse.Image
+// 	Position int
+// 	Path     string
+// 	Err      error
+// }
 
-type ComposefileImageWithoutStructTags struct {
-	*parse.Image
-	DockerfilePath string
-	Position       int
-	ServiceName    string
-	Path           string
-	Err            error
-}
+// type ComposefileImageWithoutStructTags struct {
+// 	*parse.Image
+// 	DockerfilePath string
+// 	Position       int
+// 	ServiceName    string
+// 	Path           string
+// 	Err            error
+// }
 
-type KubernetesfileImageWithoutStructTags struct {
-	*parse.Image
-	ContainerName string
-	ImagePosition int
-	DocPosition   int
-	Path          string
-	Err           error
-}
+// type KubernetesfileImageWithoutStructTags struct {
+// 	*parse.Image
+// 	ContainerName string
+// 	ImagePosition int
+// 	DocPosition   int
+// 	Path          string
+// 	Err           error
+// }
 
 func assertDockerfileImagesEqual(
 	t *testing.T,
-	expected []*parse.DockerfileImage,
-	got []*parse.DockerfileImage,
+	expected []parse.IImage,
+	got []parse.IImage,
 ) {
 	t.Helper()
 
 	if !reflect.DeepEqual(expected, got) {
-		expectedWithoutStructTags := copyDockerfileImagesToDockerfileImagesWithoutStructTags( // nolint: lll
-			t, expected,
-		)
-
-		gotWithoutStructTags := copyDockerfileImagesToDockerfileImagesWithoutStructTags( // nolint: lll
-			t, got,
-		)
-
 		t.Fatalf(
 			"expected %+v, got %+v",
-			jsonPrettyPrint(t, expectedWithoutStructTags),
-			jsonPrettyPrint(t, gotWithoutStructTags),
+			fmt.Sprintf("%#v", expected),
+			fmt.Sprintf("%#v", got),
 		)
 	}
 }
 
 func assertKubernetesfileImagesEqual(
 	t *testing.T,
-	expected []*parse.KubernetesfileImage,
-	got []*parse.KubernetesfileImage,
+	expected []parse.IImage,
+	got []parse.IImage,
 ) {
 	t.Helper()
 
 	if !reflect.DeepEqual(expected, got) {
-		expectedWithoutStructTags := copyKubernetesfileImagesToKubernetesfileImagesWithoutStructTags( // nolint: lll
-			t, expected,
-		)
-
-		gotWithoutStructTags := copyKubernetesfileImagesToKubernetesfileImagesWithoutStructTags( // nolint: lll
-			t, got,
-		)
-
+		log.Printf("%#v", got[0].Metadata())
 		t.Fatalf(
 			"expected %+v, got %+v",
-			jsonPrettyPrint(t, expectedWithoutStructTags),
-			jsonPrettyPrint(t, gotWithoutStructTags),
+			jsonPrettyPrint(t, expected),
+			jsonPrettyPrint(t, got),
 		)
 	}
 }
 
 func assertComposefileImagesEqual(
 	t *testing.T,
-	expected []*parse.ComposefileImage,
-	got []*parse.ComposefileImage,
+	expected []parse.IImage,
+	got []parse.IImage,
 ) {
 	t.Helper()
 
 	if !reflect.DeepEqual(expected, got) {
-		expectedWithoutStructTags := copyComposefileImagesToComposefileImagesWithoutStructTags( // nolint: lll
-			t, expected,
-		)
-
-		gotWithoutStructTags := copyComposefileImagesToComposefileImagesWithoutStructTags( // nolint: lll
-			t, got,
-		)
-
+		for k, v := range got {
+			log.Println(k, v)
+		}
 		t.Fatalf(
 			"expected %+v, got %+v",
-			jsonPrettyPrint(t, expectedWithoutStructTags),
-			jsonPrettyPrint(t, gotWithoutStructTags),
+			jsonPrettyPrint(t, expected),
+			jsonPrettyPrint(t, got),
 		)
 	}
 }
@@ -175,78 +157,78 @@ func makeParentDirsInTempDirFromFilePaths(
 	}
 }
 
-func copyDockerfileImagesToDockerfileImagesWithoutStructTags(
-	t *testing.T,
-	dockerfileImages []*parse.DockerfileImage,
-) []*DockerfileImageWithoutStructTags {
-	t.Helper()
+// func copyDockerfileImagesToDockerfileImagesWithoutStructTags(
+// 	t *testing.T,
+// 	dockerfileImages []*parse.DockerfileImage,
+// ) []*DockerfileImageWithoutStructTags {
+// 	t.Helper()
 
-	dockerfileImagesWithoutStructTags := make(
-		[]*DockerfileImageWithoutStructTags, len(dockerfileImages),
-	)
+// 	dockerfileImagesWithoutStructTags := make(
+// 		[]*DockerfileImageWithoutStructTags, len(dockerfileImages),
+// 	)
 
-	for i, image := range dockerfileImages {
-		dockerfileImagesWithoutStructTags[i] =
-			&DockerfileImageWithoutStructTags{
-				Image:    image.Image,
-				Position: image.Position,
-				Path:     image.Path,
-				Err:      image.Err,
-			}
-	}
+// 	for i, image := range dockerfileImages {
+// 		dockerfileImagesWithoutStructTags[i] =
+// 			&DockerfileImageWithoutStructTags{
+// 				Image:    image.Image,
+// 				Position: image.Position,
+// 				Path:     image.Path,
+// 				Err:      image.Err,
+// 			}
+// 	}
 
-	return dockerfileImagesWithoutStructTags
-}
+// 	return dockerfileImagesWithoutStructTags
+// }
 
-func copyComposefileImagesToComposefileImagesWithoutStructTags(
-	t *testing.T,
-	composefileImages []*parse.ComposefileImage,
-) []*ComposefileImageWithoutStructTags {
-	t.Helper()
+// func copyComposefileImagesToComposefileImagesWithoutStructTags(
+// 	t *testing.T,
+// 	composefileImages []*parse.ComposefileImage,
+// ) []*ComposefileImageWithoutStructTags {
+// 	t.Helper()
 
-	composefileImagesWithoutStructTags := make(
-		[]*ComposefileImageWithoutStructTags, len(composefileImages),
-	)
+// 	composefileImagesWithoutStructTags := make(
+// 		[]*ComposefileImageWithoutStructTags, len(composefileImages),
+// 	)
 
-	for i, image := range composefileImages {
-		composefileImagesWithoutStructTags[i] =
-			&ComposefileImageWithoutStructTags{
-				Image:          image.Image,
-				DockerfilePath: image.DockerfilePath,
-				Position:       image.Position,
-				ServiceName:    image.ServiceName,
-				Path:           image.Path,
-				Err:            image.Err,
-			}
-	}
+// 	for i, image := range composefileImages {
+// 		composefileImagesWithoutStructTags[i] =
+// 			&ComposefileImageWithoutStructTags{
+// 				Image:          image.Image,
+// 				DockerfilePath: image.DockerfilePath,
+// 				Position:       image.Position,
+// 				ServiceName:    image.ServiceName,
+// 				Path:           image.Path,
+// 				Err:            image.Err,
+// 			}
+// 	}
 
-	return composefileImagesWithoutStructTags
-}
+// 	return composefileImagesWithoutStructTags
+// }
 
-func copyKubernetesfileImagesToKubernetesfileImagesWithoutStructTags(
-	t *testing.T,
-	kubernetesfileImages []*parse.KubernetesfileImage,
-) []*KubernetesfileImageWithoutStructTags {
-	t.Helper()
+// func copyKubernetesfileImagesToKubernetesfileImagesWithoutStructTags(
+// 	t *testing.T,
+// 	kubernetesfileImages []*parse.KubernetesfileImage,
+// ) []*KubernetesfileImageWithoutStructTags {
+// 	t.Helper()
 
-	kubernetesfileImagesWithoutStructTags := make(
-		[]*KubernetesfileImageWithoutStructTags, len(kubernetesfileImages),
-	)
+// 	kubernetesfileImagesWithoutStructTags := make(
+// 		[]*KubernetesfileImageWithoutStructTags, len(kubernetesfileImages),
+// 	)
 
-	for i, image := range kubernetesfileImages {
-		kubernetesfileImagesWithoutStructTags[i] =
-			&KubernetesfileImageWithoutStructTags{
-				Image:         image.Image,
-				ContainerName: image.ContainerName,
-				ImagePosition: image.ImagePosition,
-				DocPosition:   image.DocPosition,
-				Path:          image.Path,
-				Err:           image.Err,
-			}
-	}
+// 	for i, image := range kubernetesfileImages {
+// 		kubernetesfileImagesWithoutStructTags[i] =
+// 			&KubernetesfileImageWithoutStructTags{
+// 				Image:         image.Image,
+// 				ContainerName: image.ContainerName,
+// 				ImagePosition: image.ImagePosition,
+// 				DocPosition:   image.DocPosition,
+// 				Path:          image.Path,
+// 				Err:           image.Err,
+// 			}
+// 	}
 
-	return kubernetesfileImagesWithoutStructTags
-}
+// 	return kubernetesfileImagesWithoutStructTags
+// }
 
 func jsonPrettyPrint(t *testing.T, i interface{}) string {
 	t.Helper()
@@ -261,54 +243,64 @@ func jsonPrettyPrint(t *testing.T, i interface{}) string {
 
 func sortDockerfileImageParserResults(
 	t *testing.T,
-	results []*parse.DockerfileImage,
+	results []parse.IImage,
 ) {
 	t.Helper()
 
 	sort.Slice(results, func(i, j int) bool {
 		switch {
-		case results[i].Path != results[j].Path:
-			return results[i].Path < results[j].Path
+		case results[i].Metadata()["path"].(string) != results[j].Metadata()["path"].(string):
+			return results[i].Metadata()["path"].(string) < results[j].Metadata()["path"].(string)
 		default:
-			return results[i].Position < results[j].Position
+			return results[i].Metadata()["position"].(int) < results[j].Metadata()["position"].(int)
 		}
 	})
 }
 
 func sortKubernetesfileImageParserResults(
 	t *testing.T,
-	results []*parse.KubernetesfileImage,
+	results []parse.IImage,
 ) {
 	t.Helper()
 
 	sort.Slice(results, func(i, j int) bool {
 		switch {
-		case results[i].Path != results[j].Path:
-			return results[i].Path < results[j].Path
-		case results[i].DocPosition != results[j].DocPosition:
-			return results[i].DocPosition < results[j].DocPosition
+		case results[i].Metadata()["path"].(string) != results[j].Metadata()["path"].(string):
+			return results[i].Metadata()["path"].(string) < results[j].Metadata()["path"].(string)
+		case results[i].Metadata()["docPosition"].(int) != results[j].Metadata()["docPosition"].(int):
+			return results[i].Metadata()["docPosition"].(int) < results[j].Metadata()["docPosition"].(int)
 		default:
-			return results[i].ImagePosition < results[j].ImagePosition
+			return results[i].Metadata()["imagePosition"].(int) < results[j].Metadata()["imagePosition"].(int)
 		}
 	})
 }
 
 func sortComposefileImageParserResults(
 	t *testing.T,
-	results []*parse.ComposefileImage,
+	results []parse.IImage,
 ) {
 	t.Helper()
 
 	sort.Slice(results, func(i, j int) bool {
 		switch {
-		case results[i].Path != results[j].Path:
-			return results[i].Path < results[j].Path
-		case results[i].ServiceName != results[j].ServiceName:
-			return results[i].ServiceName < results[j].ServiceName
-		case results[i].DockerfilePath != results[j].DockerfilePath:
-			return results[i].DockerfilePath < results[j].DockerfilePath
+		case results[i].Metadata()["path"].(string) != results[j].Metadata()["path"].(string):
+			return results[i].Metadata()["path"].(string) < results[j].Metadata()["path"].(string)
+		case results[i].Metadata()["serviceName"].(string) != results[j].Metadata()["serviceName"].(string):
+			return results[i].Metadata()["serviceName"].(string) < results[j].Metadata()["serviceName"].(string)
+		case results[i].Metadata()["dockerfilePath"].(string) != results[j].Metadata()["dockerfilePath"].(string):
+			return results[i].Metadata()["dockerfilePath"].(string) < results[j].Metadata()["dockerfilePath"].(string)
 		default:
-			return results[i].Position < results[j].Position
+			return results[i].Metadata()["position"].(int) < results[j].Metadata()["position"].(int)
 		}
 	})
+}
+
+func makeImage(
+	kind string,
+	name string,
+	tag string,
+	digest string,
+	metadata map[string]interface{},
+) parse.IImage {
+	return parse.NewImage(kind, name, tag, digest, metadata, nil)
 }

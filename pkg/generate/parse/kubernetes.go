@@ -10,39 +10,23 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
-// KubernetesfileImageParser extracts image values from Kubernetesfiles.
-type KubernetesfileImageParser struct{}
+// kubernetesfileImageParser extracts image values from Kubernetesfiles.
+type kubernetesfileImageParser struct{}
 
-// KubernetesfileImage annotates an image with data about the
-// Kubernetesfile from which it was parsed.
-type KubernetesfileImage struct {
-	*Image
-	ContainerName string `json:"container"`
-	ImagePosition int    `json:"-"`
-	DocPosition   int    `json:"-"`
-	Path          string `json:"-"`
-	Err           error  `json:"-"`
-}
-
-// IKubernetesfileImageParser provides an interface for
-// KubernetesfileImageParser's exported methods.
-type IKubernetesfileImageParser interface {
-	ParseFiles(
-		paths <-chan string,
-		done <-chan struct{},
-	) <-chan *KubernetesfileImage
+func NewKubernetesfileImageParser() IKubernetesfileImageParser {
+	return &kubernetesfileImageParser{}
 }
 
 // ParseFiles reads Kubernetesfiles to parse all images.
-func (k *KubernetesfileImageParser) ParseFiles(
+func (k *kubernetesfileImageParser) ParseFiles(
 	paths <-chan string,
 	done <-chan struct{},
-) <-chan *KubernetesfileImage {
+) <-chan IImage {
 	if paths == nil {
 		return nil
 	}
 
-	kubernetesfileImages := make(chan *KubernetesfileImage)
+	kubernetesfileImages := make(chan IImage)
 
 	var waitGroup sync.WaitGroup
 
@@ -54,7 +38,7 @@ func (k *KubernetesfileImageParser) ParseFiles(
 		for path := range paths {
 			waitGroup.Add(1)
 
-			go k.parseFile(
+			go k.ParseFile(
 				path, kubernetesfileImages, done, &waitGroup,
 			)
 		}
@@ -68,9 +52,9 @@ func (k *KubernetesfileImageParser) ParseFiles(
 	return kubernetesfileImages
 }
 
-func (k *KubernetesfileImageParser) parseFile(
+func (k *kubernetesfileImageParser) ParseFile(
 	path string,
-	kubernetesfileImages chan<- *KubernetesfileImage,
+	kubernetesfileImages chan<- IImage,
 	done <-chan struct{},
 	waitGroup *sync.WaitGroup,
 ) {
@@ -80,7 +64,7 @@ func (k *KubernetesfileImageParser) parseFile(
 	if err != nil {
 		select {
 		case <-done:
-		case kubernetesfileImages <- &KubernetesfileImage{Err: err}:
+		case kubernetesfileImages <- NewImage("Kubernetesfile", "", "", "", nil, err):
 		}
 
 		return
@@ -90,7 +74,7 @@ func (k *KubernetesfileImageParser) parseFile(
 	if err != nil {
 		select {
 		case <-done:
-		case kubernetesfileImages <- &KubernetesfileImage{Err: err}:
+		case kubernetesfileImages <- NewImage("Kubernetesfile", "", "", "", nil, err):
 		}
 
 		return
@@ -105,7 +89,7 @@ func (k *KubernetesfileImageParser) parseFile(
 			if err != io.EOF {
 				select {
 				case <-done:
-				case kubernetesfileImages <- &KubernetesfileImage{Err: err}:
+				case kubernetesfileImages <- NewImage("Kubernetesfile", "", "", "", nil, err):
 				}
 
 				return
@@ -122,10 +106,10 @@ func (k *KubernetesfileImageParser) parseFile(
 	}
 }
 
-func (k *KubernetesfileImageParser) parseDoc(
+func (k *kubernetesfileImageParser) parseDoc(
 	path string,
 	doc interface{},
-	kubernetesfileImages chan<- *KubernetesfileImage,
+	kubernetesfileImages chan<- IImage,
 	docPosition int,
 	done <-chan struct{},
 	waitGroup *sync.WaitGroup,
@@ -139,10 +123,10 @@ func (k *KubernetesfileImageParser) parseDoc(
 	)
 }
 
-func (k *KubernetesfileImageParser) parseDocRecursive(
+func (k *kubernetesfileImageParser) parseDocRecursive(
 	path string,
 	doc interface{},
-	kubernetesfileImages chan<- *KubernetesfileImage,
+	kubernetesfileImages chan<- IImage,
 	docPosition int,
 	imagePosition *int,
 	done <-chan struct{},
@@ -166,17 +150,17 @@ func (k *KubernetesfileImageParser) parseDocRecursive(
 		}
 
 		if name != "" && imageLine != "" {
-			image := convertImageLineToImage(imageLine)
+			image := NewImage("Kubernetesfile", "", "", "", map[string]interface{}{
+				"containerName": name,
+				"path":          path,
+				"imagePosition": *imagePosition,
+				"docPosition":   docPosition,
+			}, nil)
+			image.SetNameTagDigestFromImageLine(imageLine)
 
 			select {
 			case <-done:
-			case kubernetesfileImages <- &KubernetesfileImage{
-				Image:         image,
-				ContainerName: name,
-				Path:          path,
-				ImagePosition: *imagePosition,
-				DocPosition:   docPosition,
-			}:
+			case kubernetesfileImages <- image:
 			}
 
 			*imagePosition++

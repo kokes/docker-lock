@@ -11,7 +11,7 @@ type pathCollector struct {
 	collectors []collect.IPathCollector
 }
 
-func NewPathCollector(collectors []collect.IPathCollector) (IPathCollector, error) {
+func NewPathCollector(collectors ...collect.IPathCollector) (IPathCollector, error) {
 	if len(collectors) == 0 {
 		return nil, errors.New("collectors must be greater than 0")
 	}

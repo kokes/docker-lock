@@ -138,11 +138,7 @@ spec:
 			}
 			kubernetesfileImageParser := parse.NewKubernetesfileImageParser(kind.Kubernetesfile)
 
-			imageParser, err := generate.NewImageParser(map[kind.Kind]parse.IImageParser{
-				kind.Dockerfile:     dockerfileImageParser,
-				kind.Composefile:    composefileImageParser,
-				kind.Kubernetesfile: kubernetesfileImageParser,
-			})
+			imageParser, err := generate.NewImageParser(dockerfileImageParser, composefileImageParser, kubernetesfileImageParser)
 
 			if err != nil {
 				t.Fatal(err)

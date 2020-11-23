@@ -1,8 +1,7 @@
 package generate
 
 import (
-	"fmt"
-	"reflect"
+	"errors"
 	"sync"
 
 	"github.com/safe-waters/docker-lock/pkg/generate/collect"
@@ -14,14 +13,17 @@ type imageParser struct {
 	parsers map[kind.Kind]parse.IImageParser
 }
 
-func NewImageParser(parsers map[kind.Kind]parse.IImageParser) (IImageParser, error) {
-	for kind, parser := range parsers {
-		if parser == nil || reflect.ValueOf(parser).IsNil() {
-			return nil, fmt.Errorf("%s parser is nil", kind)
-		}
+func NewImageParser(parsers ...parse.IImageParser) (IImageParser, error) {
+	if len(parsers) == 0 {
+		return nil, errors.New("parsers must be greater than 0")
 	}
 
-	return &imageParser{parsers: parsers}, nil
+	kindParser := map[kind.Kind]parse.IImageParser{}
+	for _, parser := range parsers {
+		kindParser[parser.Kind()] = parser
+	}
+
+	return &imageParser{parsers: kindParser}, nil
 }
 
 // ParseFiles parses all files for Images.

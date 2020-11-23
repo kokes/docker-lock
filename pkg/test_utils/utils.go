@@ -18,7 +18,11 @@ import (
 	"github.com/safe-waters/docker-lock/pkg/kind"
 )
 
-const BusyboxLatestSHA = "bae015c28bc7cdee3b7ef20d35db4299e3068554a769070950229d9f53f58572" // nolint: lll
+const (
+	BusyboxLatestSHA = "bae015c28bc7cdee3b7ef20d35db4299e3068554a769070950229d9f53f58572" // nolint: lll
+	GolangLatestSHA  = "6cb55c08bbf44793f16e3572bd7d2ae18f7a858f6ae4faa474c0a6eae1174a5d" // nolint: lll
+	RedisLatestSHA   = "09c33840ec47815dc0351f1eca3befe741d7105b3e95bc8fdb9a7e4985b9e1e5" // nolint: lll
+)
 
 func AssertImagesEqual(
 	t *testing.T,
@@ -92,6 +96,10 @@ func MockServer(t *testing.T, numNetworkCalls *uint64) *httptest.Server {
 				switch fmt.Sprintf("%s:%s", repo, ref) {
 				case "busybox:latest":
 					digest = BusyboxLatestSHA
+				case "redis:latest":
+					digest = RedisLatestSHA
+				case "golang:latest":
+					digest = GolangLatestSHA
 				default:
 					digest = fmt.Sprintf(
 						"repo %s with ref %s not defined for testing",

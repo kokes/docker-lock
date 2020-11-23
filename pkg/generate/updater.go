@@ -16,7 +16,7 @@ type imageDigestUpdater struct {
 func NewImageDigestUpdater(
 	updater update.IImageDigestUpdater,
 	ignoreMissingDigests bool,
-) (*imageDigestUpdater, error) {
+) (IImageDigestUpdater, error) {
 
 	return &imageDigestUpdater{
 		updater:              updater,
@@ -50,7 +50,7 @@ func (i *imageDigestUpdater) UpdateDigests(
 			defer imagesWithoutDigestsWaitGroup.Done()
 
 			for image := range images {
-				if image.Digest() != "" {
+				if image.Digest() == "" {
 					key := image.Name() + image.Tag()
 					if _, ok := digestsToUpdate[key]; !ok { // nolint: lll
 						select {
@@ -61,6 +61,12 @@ func (i *imageDigestUpdater) UpdateDigests(
 					}
 
 					digestsToUpdate[key] = append(digestsToUpdate[key], image)
+				} else {
+					select {
+					case <-done:
+						return
+					case updatedImages <- image:
+					}
 				}
 			}
 		}()
@@ -72,7 +78,9 @@ func (i *imageDigestUpdater) UpdateDigests(
 
 		var allUpdatedImages []parse.IImage
 
-		for updatedImage := range i.updater.UpdateDigests(imagesWithoutDigests, done) {
+		for updatedImage := range i.updater.UpdateDigests(
+			imagesWithoutDigests, done,
+		) {
 			if updatedImage.Err() != nil && !i.ignoreMissingDigests {
 				select {
 				case <-done:

@@ -153,14 +153,14 @@ func (c *composefileImageParser) ParseFile(
 		waitGroup.Add(1)
 
 		go c.parseService(
-			serviceConfig, path.Path(), envVars, composefileImages, waitGroup, done,
+			serviceConfig, path, envVars, composefileImages, waitGroup, done,
 		)
 	}
 }
 
 func (c *composefileImageParser) parseService(
 	serviceConfig types.ServiceConfig,
-	path string,
+	path collect.IPath,
 	envVars map[string]string,
 	composefileImages chan<- IImage,
 	waitGroup *sync.WaitGroup,
@@ -172,7 +172,7 @@ func (c *composefileImageParser) parseService(
 		image := NewImage(c.kind, "", "", "", map[string]interface{}{
 			"serviceName": serviceConfig.Name,
 			"position":    0,
-			"path":        path,
+			"path":        path.Path(),
 		}, nil)
 
 		image.SetNameTagDigestFromImageLine(serviceConfig.Image)
@@ -196,7 +196,7 @@ func (c *composefileImageParser) parseService(
 
 		context := serviceConfig.Build.Context
 		if !filepath.IsAbs(context) {
-			context = filepath.Join(filepath.Dir(path), context)
+			context = filepath.Join(filepath.Dir(path.Path()), context)
 		}
 
 		dockerfile := serviceConfig.Build.Dockerfile
@@ -234,6 +234,8 @@ func (c *composefileImageParser) parseService(
 	}()
 
 	for dockerfileImage := range dockerfileImages {
+		dockerfileImage.SetKind(c.kind)
+
 		if dockerfileImage.Err() != nil {
 			select {
 			case <-done:
@@ -247,7 +249,7 @@ func (c *composefileImageParser) parseService(
 			"dockerfilePath": dockerfileImage.Metadata()["path"],
 			"position":       dockerfileImage.Metadata()["position"],
 			"serviceName":    serviceConfig.Name,
-			"path":           path,
+			"path":           path.Path(),
 		})
 
 		select {

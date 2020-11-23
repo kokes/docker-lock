@@ -280,7 +280,7 @@ FROM
 				})
 			}
 
-			test_utils.AssertDockerfileImagesEqual(t, test.Expected, got)
+			test_utils.AssertImagesEqual(t, test.Expected, got)
 		})
 	}
 }

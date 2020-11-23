@@ -567,7 +567,7 @@ services:
 			}
 			test_utils.SortComposefileImageParserResults(t, got)
 
-			test_utils.AssertComposefileImagesEqual(t, test.Expected, got)
+			test_utils.AssertImagesEqual(t, test.Expected, got)
 		})
 	}
 }

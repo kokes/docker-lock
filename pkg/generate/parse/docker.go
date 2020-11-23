@@ -167,7 +167,7 @@ func (d *dockerfileImageParser) ParseFile(
 			if !stages[raw[0]] {
 				image := NewImage(d.kind, "", "", "", map[string]interface{}{
 					"position": position,
-					"path":     path,
+					"path":     path.Path(),
 				}, nil)
 				imageLine := d.expandField(raw[0], globalArgs, buildArgs)
 

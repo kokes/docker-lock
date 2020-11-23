@@ -241,7 +241,7 @@ spec:
 				kubernetesfileImage.SetMetadata(metadata)
 			}
 
-			test_utils.AssertKubernetesfileImagesEqual(t, test.Expected, got)
+			test_utils.AssertImagesEqual(t, test.Expected, got)
 		})
 	}
 }

@@ -2,7 +2,6 @@ package test_utils
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -15,7 +14,7 @@ import (
 	"github.com/safe-waters/docker-lock/pkg/kind"
 )
 
-func AssertDockerfileImagesEqual(
+func AssertImagesEqual(
 	t *testing.T,
 	expected []parse.IImage,
 	got []parse.IImage,
@@ -23,48 +22,13 @@ func AssertDockerfileImagesEqual(
 	t.Helper()
 
 	if !reflect.DeepEqual(expected, got) {
+		log.Println(expected[0].Metadata())
+		log.Println(got[0].Metadata())
 		t.Fatalf(
-			"expected %+v, got %+v",
-			fmt.Sprintf("%#v", expected),
-			fmt.Sprintf("%#v", got),
+			"expected %#v, got %#v", expected, got,
 		)
 	}
-}
 
-func AssertKubernetesfileImagesEqual(
-	t *testing.T,
-	expected []parse.IImage,
-	got []parse.IImage,
-) {
-	t.Helper()
-
-	if !reflect.DeepEqual(expected, got) {
-		log.Printf("%#v", got[0].Metadata())
-		t.Fatalf(
-			"expected %+v, got %+v",
-			JsonPrettyPrint(t, expected),
-			JsonPrettyPrint(t, got),
-		)
-	}
-}
-
-func AssertComposefileImagesEqual(
-	t *testing.T,
-	expected []parse.IImage,
-	got []parse.IImage,
-) {
-	t.Helper()
-
-	if !reflect.DeepEqual(expected, got) {
-		for k, v := range got {
-			log.Println(k, v)
-		}
-		t.Fatalf(
-			"expected %+v, got %+v",
-			JsonPrettyPrint(t, expected),
-			JsonPrettyPrint(t, got),
-		)
-	}
 }
 
 func WriteFilesToTempDir(

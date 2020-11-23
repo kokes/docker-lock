@@ -1,4 +1,4 @@
-package parse_test
+package test_utils
 
 import (
 	"encoding/json"
@@ -14,32 +14,7 @@ import (
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
 )
 
-// type DockerfileImageWithoutStructTags struct {
-// 	*parse.Image
-// 	Position int
-// 	Path     string
-// 	Err      error
-// }
-
-// type ComposefileImageWithoutStructTags struct {
-// 	*parse.Image
-// 	DockerfilePath string
-// 	Position       int
-// 	ServiceName    string
-// 	Path           string
-// 	Err            error
-// }
-
-// type KubernetesfileImageWithoutStructTags struct {
-// 	*parse.Image
-// 	ContainerName string
-// 	ImagePosition int
-// 	DocPosition   int
-// 	Path          string
-// 	Err           error
-// }
-
-func assertDockerfileImagesEqual(
+func AssertDockerfileImagesEqual(
 	t *testing.T,
 	expected []parse.IImage,
 	got []parse.IImage,
@@ -55,7 +30,7 @@ func assertDockerfileImagesEqual(
 	}
 }
 
-func assertKubernetesfileImagesEqual(
+func AssertKubernetesfileImagesEqual(
 	t *testing.T,
 	expected []parse.IImage,
 	got []parse.IImage,
@@ -66,13 +41,13 @@ func assertKubernetesfileImagesEqual(
 		log.Printf("%#v", got[0].Metadata())
 		t.Fatalf(
 			"expected %+v, got %+v",
-			jsonPrettyPrint(t, expected),
-			jsonPrettyPrint(t, got),
+			JsonPrettyPrint(t, expected),
+			JsonPrettyPrint(t, got),
 		)
 	}
 }
 
-func assertComposefileImagesEqual(
+func AssertComposefileImagesEqual(
 	t *testing.T,
 	expected []parse.IImage,
 	got []parse.IImage,
@@ -85,13 +60,13 @@ func assertComposefileImagesEqual(
 		}
 		t.Fatalf(
 			"expected %+v, got %+v",
-			jsonPrettyPrint(t, expected),
-			jsonPrettyPrint(t, got),
+			JsonPrettyPrint(t, expected),
+			JsonPrettyPrint(t, got),
 		)
 	}
 }
 
-func writeFilesToTempDir(
+func WriteFilesToTempDir(
 	t *testing.T,
 	tempDir string,
 	fileNames []string,
@@ -122,7 +97,7 @@ func writeFilesToTempDir(
 	return fullPaths
 }
 
-func makeDir(t *testing.T, dirPath string) {
+func MakeDir(t *testing.T, dirPath string) {
 	t.Helper()
 
 	err := os.MkdirAll(dirPath, 0777)
@@ -131,7 +106,7 @@ func makeDir(t *testing.T, dirPath string) {
 	}
 }
 
-func makeTempDir(t *testing.T, dirName string) string {
+func MakeTempDir(t *testing.T, dirName string) string {
 	t.Helper()
 
 	dir, err := ioutil.TempDir("", dirName)
@@ -142,7 +117,7 @@ func makeTempDir(t *testing.T, dirName string) string {
 	return dir
 }
 
-func makeParentDirsInTempDirFromFilePaths(
+func MakeParentDirsInTempDirFromFilePaths(
 	t *testing.T,
 	tempDir string,
 	paths []string,
@@ -153,84 +128,11 @@ func makeParentDirsInTempDirFromFilePaths(
 		dir, _ := filepath.Split(p)
 		fullDir := filepath.Join(tempDir, dir)
 
-		makeDir(t, fullDir)
+		MakeDir(t, fullDir)
 	}
 }
 
-// func copyDockerfileImagesToDockerfileImagesWithoutStructTags(
-// 	t *testing.T,
-// 	dockerfileImages []*parse.DockerfileImage,
-// ) []*DockerfileImageWithoutStructTags {
-// 	t.Helper()
-
-// 	dockerfileImagesWithoutStructTags := make(
-// 		[]*DockerfileImageWithoutStructTags, len(dockerfileImages),
-// 	)
-
-// 	for i, image := range dockerfileImages {
-// 		dockerfileImagesWithoutStructTags[i] =
-// 			&DockerfileImageWithoutStructTags{
-// 				Image:    image.Image,
-// 				Position: image.Position,
-// 				Path:     image.Path,
-// 				Err:      image.Err,
-// 			}
-// 	}
-
-// 	return dockerfileImagesWithoutStructTags
-// }
-
-// func copyComposefileImagesToComposefileImagesWithoutStructTags(
-// 	t *testing.T,
-// 	composefileImages []*parse.ComposefileImage,
-// ) []*ComposefileImageWithoutStructTags {
-// 	t.Helper()
-
-// 	composefileImagesWithoutStructTags := make(
-// 		[]*ComposefileImageWithoutStructTags, len(composefileImages),
-// 	)
-
-// 	for i, image := range composefileImages {
-// 		composefileImagesWithoutStructTags[i] =
-// 			&ComposefileImageWithoutStructTags{
-// 				Image:          image.Image,
-// 				DockerfilePath: image.DockerfilePath,
-// 				Position:       image.Position,
-// 				ServiceName:    image.ServiceName,
-// 				Path:           image.Path,
-// 				Err:            image.Err,
-// 			}
-// 	}
-
-// 	return composefileImagesWithoutStructTags
-// }
-
-// func copyKubernetesfileImagesToKubernetesfileImagesWithoutStructTags(
-// 	t *testing.T,
-// 	kubernetesfileImages []*parse.KubernetesfileImage,
-// ) []*KubernetesfileImageWithoutStructTags {
-// 	t.Helper()
-
-// 	kubernetesfileImagesWithoutStructTags := make(
-// 		[]*KubernetesfileImageWithoutStructTags, len(kubernetesfileImages),
-// 	)
-
-// 	for i, image := range kubernetesfileImages {
-// 		kubernetesfileImagesWithoutStructTags[i] =
-// 			&KubernetesfileImageWithoutStructTags{
-// 				Image:         image.Image,
-// 				ContainerName: image.ContainerName,
-// 				ImagePosition: image.ImagePosition,
-// 				DocPosition:   image.DocPosition,
-// 				Path:          image.Path,
-// 				Err:           image.Err,
-// 			}
-// 	}
-
-// 	return kubernetesfileImagesWithoutStructTags
-// }
-
-func jsonPrettyPrint(t *testing.T, i interface{}) string {
+func JsonPrettyPrint(t *testing.T, i interface{}) string {
 	t.Helper()
 
 	byt, err := json.MarshalIndent(i, "", "\t")
@@ -241,7 +143,7 @@ func jsonPrettyPrint(t *testing.T, i interface{}) string {
 	return string(byt)
 }
 
-func sortDockerfileImageParserResults(
+func SortDockerfileImageParserResults(
 	t *testing.T,
 	results []parse.IImage,
 ) {
@@ -257,7 +159,7 @@ func sortDockerfileImageParserResults(
 	})
 }
 
-func sortKubernetesfileImageParserResults(
+func SortKubernetesfileImageParserResults(
 	t *testing.T,
 	results []parse.IImage,
 ) {
@@ -275,7 +177,7 @@ func sortKubernetesfileImageParserResults(
 	})
 }
 
-func sortComposefileImageParserResults(
+func SortComposefileImageParserResults(
 	t *testing.T,
 	results []parse.IImage,
 ) {
@@ -295,7 +197,7 @@ func sortComposefileImageParserResults(
 	})
 }
 
-func makeImage(
+func MakeImage(
 	kind string,
 	name string,
 	tag string,

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
+	"github.com/safe-waters/docker-lock/pkg/test_utils"
 )
 
 const dockerfileImageParserTestDir = "dockerfileParser-tests"
@@ -31,15 +32,15 @@ FROM node
 `),
 			},
 			Expected: []parse.IImage{
-				makeImage("Dockerfile", "ubuntu", "bionic", "", map[string]interface{}{
+				test_utils.MakeImage("Dockerfile", "ubuntu", "bionic", "", map[string]interface{}{
 					"path":     "Dockerfile",
 					"position": 0,
 				}),
-				makeImage("Dockerfile", "golang", "1.14", "", map[string]interface{}{
+				test_utils.MakeImage("Dockerfile", "golang", "1.14", "", map[string]interface{}{
 					"path":     "Dockerfile",
 					"position": 1,
 				}),
-				makeImage("Dockerfile", "node", "latest", "", map[string]interface{}{
+				test_utils.MakeImage("Dockerfile", "node", "latest", "", map[string]interface{}{
 					"path":     "Dockerfile",
 					"position": 2,
 				}),
@@ -54,7 +55,7 @@ FROM scratch
 `),
 			},
 			Expected: []parse.IImage{
-				makeImage("Dockerfile", "scratch", "", "", map[string]interface{}{
+				test_utils.MakeImage("Dockerfile", "scratch", "", "", map[string]interface{}{
 					"path":     "Dockerfile",
 					"position": 0,
 				}),
@@ -69,7 +70,7 @@ FROM ubuntu@sha256:bae015c28bc7
 `),
 			},
 			Expected: []parse.IImage{
-				makeImage("Dockerfile", "ubuntu", "", "bae015c28bc7", map[string]interface{}{
+				test_utils.MakeImage("Dockerfile", "ubuntu", "", "bae015c28bc7", map[string]interface{}{
 					"path":     "Dockerfile",
 					"position": 0,
 				}),
@@ -84,7 +85,7 @@ FROM --platform=$BUILDPLATFORM ubuntu@sha256:bae015c28bc7
 `),
 			},
 			Expected: []parse.IImage{
-				makeImage("Dockerfile", "ubuntu", "", "bae015c28bc7", map[string]interface{}{
+				test_utils.MakeImage("Dockerfile", "ubuntu", "", "bae015c28bc7", map[string]interface{}{
 					"path":     "Dockerfile",
 					"position": 0,
 				}),
@@ -99,7 +100,7 @@ FROM ubuntu:bionic@sha256:bae015c28bc7
 `),
 			},
 			Expected: []parse.IImage{
-				makeImage("Dockerfile", "ubuntu", "bionic", "bae015c28bc7", map[string]interface{}{
+				test_utils.MakeImage("Dockerfile", "ubuntu", "bionic", "bae015c28bc7", map[string]interface{}{
 					"path":     "Dockerfile",
 					"position": 0,
 				}),
@@ -114,7 +115,7 @@ FROM localhost:5000/ubuntu:bionic@sha256:bae015c28bc7
 `),
 			},
 			Expected: []parse.IImage{
-				makeImage("Dockerfile", "localhost:5000/ubuntu", "bionic", "bae015c28bc7", map[string]interface{}{
+				test_utils.MakeImage("Dockerfile", "localhost:5000/ubuntu", "bionic", "bae015c28bc7", map[string]interface{}{
 					"path":     "Dockerfile",
 					"position": 0,
 				}),
@@ -132,11 +133,11 @@ FROM ${IMAGE}
 `),
 			},
 			Expected: []parse.IImage{
-				makeImage("Dockerfile", "busybox", "latest", "", map[string]interface{}{
+				test_utils.MakeImage("Dockerfile", "busybox", "latest", "", map[string]interface{}{
 					"path":     "Dockerfile",
 					"position": 0,
 				}),
-				makeImage("Dockerfile", "busybox", "latest", "", map[string]interface{}{
+				test_utils.MakeImage("Dockerfile", "busybox", "latest", "", map[string]interface{}{
 					"path":     "Dockerfile",
 					"position": 1,
 				}),
@@ -153,11 +154,11 @@ FROM ubuntu as worker
 `),
 			},
 			Expected: []parse.IImage{
-				makeImage("Dockerfile", "busybox", "latest", "", map[string]interface{}{
+				test_utils.MakeImage("Dockerfile", "busybox", "latest", "", map[string]interface{}{
 					"path":     "Dockerfile",
 					"position": 0,
 				}),
-				makeImage("Dockerfile", "ubuntu", "latest", "", map[string]interface{}{
+				test_utils.MakeImage("Dockerfile", "ubuntu", "latest", "", map[string]interface{}{
 					"path":     "Dockerfile",
 					"position": 1,
 				}),
@@ -177,19 +178,19 @@ FROM busybox
 `),
 			},
 			Expected: []parse.IImage{
-				makeImage("Dockerfile", "busybox", "latest", "", map[string]interface{}{
+				test_utils.MakeImage("Dockerfile", "busybox", "latest", "", map[string]interface{}{
 					"path":     "Dockerfile-one",
 					"position": 0,
 				}),
-				makeImage("Dockerfile", "ubuntu", "latest", "", map[string]interface{}{
+				test_utils.MakeImage("Dockerfile", "ubuntu", "latest", "", map[string]interface{}{
 					"path":     "Dockerfile-one",
 					"position": 1,
 				}),
-				makeImage("Dockerfile", "ubuntu", "latest", "", map[string]interface{}{
+				test_utils.MakeImage("Dockerfile", "ubuntu", "latest", "", map[string]interface{}{
 					"path":     "Dockerfile-two",
 					"position": 0,
 				}),
-				makeImage("Dockerfile", "busybox", "latest", "", map[string]interface{}{
+				test_utils.MakeImage("Dockerfile", "busybox", "latest", "", map[string]interface{}{
 					"path":     "Dockerfile-two",
 					"position": 1,
 				}),
@@ -224,13 +225,13 @@ FROM
 		t.Run(test.Name, func(t *testing.T) {
 			t.Parallel()
 
-			tempDir := makeTempDir(t, dockerfileImageParserTestDir)
+			tempDir := test_utils.MakeTempDir(t, dockerfileImageParserTestDir)
 			defer os.RemoveAll(tempDir)
 
-			makeParentDirsInTempDirFromFilePaths(
+			test_utils.MakeParentDirsInTempDirFromFilePaths(
 				t, tempDir, test.DockerfilePaths,
 			)
-			pathsToParse := writeFilesToTempDir(
+			pathsToParse := test_utils.WriteFilesToTempDir(
 				t, tempDir, test.DockerfilePaths, test.DockerfileContents,
 			)
 
@@ -266,7 +267,7 @@ FROM
 				got = append(got, dockerfileImage)
 			}
 
-			sortDockerfileImageParserResults(t, got)
+			test_utils.SortDockerfileImageParserResults(t, got)
 
 			for _, dockerfileImage := range test.Expected {
 				dockerfileImage.SetMetadata(map[string]interface{}{
@@ -277,7 +278,7 @@ FROM
 				})
 			}
 
-			assertDockerfileImagesEqual(t, test.Expected, got)
+			test_utils.AssertDockerfileImagesEqual(t, test.Expected, got)
 		})
 	}
 }

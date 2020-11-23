@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
+	"github.com/safe-waters/docker-lock/pkg/test_utils"
 )
 
 const kubernetesfileImageParserTestDir = "kubernetesfileParser-tests"
@@ -43,13 +44,13 @@ spec:
 `),
 			},
 			Expected: []parse.IImage{
-				makeImage("Kubernetesfile", "busybox", "latest", "", map[string]interface{}{
+				test_utils.MakeImage("Kubernetesfile", "busybox", "latest", "", map[string]interface{}{
 					"path":          "pod.yaml",
 					"docPosition":   0,
 					"imagePosition": 0,
 					"containerName": "busybox",
 				}),
-				makeImage("Kubernetesfile", "golang", "latest", "", map[string]interface{}{
+				test_utils.MakeImage("Kubernetesfile", "golang", "latest", "", map[string]interface{}{
 					"path":          "pod.yaml",
 					"docPosition":   0,
 					"imagePosition": 1,
@@ -97,25 +98,25 @@ spec:
 `),
 			},
 			Expected: []parse.IImage{
-				makeImage("Kubernetesfile", "busybox", "latest", "", map[string]interface{}{
+				test_utils.MakeImage("Kubernetesfile", "busybox", "latest", "", map[string]interface{}{
 					"path":          "pod.yaml",
 					"docPosition":   0,
 					"imagePosition": 0,
 					"containerName": "busybox",
 				}),
-				makeImage("Kubernetesfile", "golang", "latest", "", map[string]interface{}{
+				test_utils.MakeImage("Kubernetesfile", "golang", "latest", "", map[string]interface{}{
 					"path":          "pod.yaml",
 					"docPosition":   0,
 					"imagePosition": 1,
 					"containerName": "golang",
 				}),
-				makeImage("Kubernetesfile", "redis", "1.0", "123", map[string]interface{}{
+				test_utils.MakeImage("Kubernetesfile", "redis", "1.0", "123", map[string]interface{}{
 					"path":          "pod.yaml",
 					"docPosition":   1,
 					"imagePosition": 0,
 					"containerName": "redis",
 				}),
-				makeImage("Kubernetesfile", "bash", "v1", "", map[string]interface{}{
+				test_utils.MakeImage("Kubernetesfile", "bash", "v1", "", map[string]interface{}{
 					"path":          "pod.yaml",
 					"docPosition":   1,
 					"imagePosition": 1,
@@ -165,13 +166,13 @@ spec:
 `),
 			},
 			Expected: []parse.IImage{
-				makeImage("Kubernetesfile", "nginx", "latest", "", map[string]interface{}{
+				test_utils.MakeImage("Kubernetesfile", "nginx", "latest", "", map[string]interface{}{
 					"path":          "deployment.yaml",
 					"docPosition":   0,
 					"imagePosition": 0,
 					"containerName": "nginx",
 				}),
-				makeImage("Kubernetesfile", "busybox", "latest", "", map[string]interface{}{
+				test_utils.MakeImage("Kubernetesfile", "busybox", "latest", "", map[string]interface{}{
 					"path":          "pod.yaml",
 					"docPosition":   0,
 					"imagePosition": 0,
@@ -187,13 +188,13 @@ spec:
 		t.Run(test.Name, func(t *testing.T) {
 			t.Parallel()
 
-			tempDir := makeTempDir(t, kubernetesfileImageParserTestDir)
+			tempDir := test_utils.MakeTempDir(t, kubernetesfileImageParserTestDir)
 			defer os.RemoveAll(tempDir)
 
-			makeParentDirsInTempDirFromFilePaths(
+			test_utils.MakeParentDirsInTempDirFromFilePaths(
 				t, tempDir, test.KubernetesfilePaths,
 			)
-			pathsToParse := writeFilesToTempDir(
+			pathsToParse := test_utils.WriteFilesToTempDir(
 				t, tempDir, test.KubernetesfilePaths,
 				test.KubernetesfileContents,
 			)
@@ -230,7 +231,7 @@ spec:
 				got = append(got, kubernetesfileImage)
 			}
 
-			sortKubernetesfileImageParserResults(t, got)
+			test_utils.SortKubernetesfileImageParserResults(t, got)
 
 			for _, kubernetesfileImage := range test.Expected {
 				metadata := kubernetesfileImage.Metadata()
@@ -238,7 +239,7 @@ spec:
 				kubernetesfileImage.SetMetadata(metadata)
 			}
 
-			assertKubernetesfileImagesEqual(t, test.Expected, got)
+			test_utils.AssertKubernetesfileImagesEqual(t, test.Expected, got)
 		})
 	}
 }

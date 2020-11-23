@@ -8,6 +8,8 @@ import (
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
 	"github.com/safe-waters/docker-lock/pkg/generate/registry"
 	"github.com/safe-waters/docker-lock/pkg/generate/update"
+	"github.com/safe-waters/docker-lock/pkg/kind"
+	"github.com/safe-waters/docker-lock/pkg/test_utils"
 )
 
 func TestImageDigestUpdater(t *testing.T) {
@@ -15,196 +17,83 @@ func TestImageDigestUpdater(t *testing.T) {
 
 	tests := []struct {
 		Name                    string
-		AnyImages               []*generate.AnyImage
+		Images                  []parse.IImage
 		ExpectedNumNetworkCalls uint64
-		Expected                []*generate.AnyImage
+		Expected                []parse.IImage
 	}{
 		{
 			Name: "Dockerfiles, Composefiles, And Kubernetesfiles",
-			AnyImages: []*generate.AnyImage{
-				{
-					DockerfileImage: &parse.DockerfileImage{
-						Image: &parse.Image{
-							Name: "redis",
-							Tag:  "latest",
-						},
-						Position: 0,
-						Path:     "Dockerfile",
-					},
-				},
-				{
-					DockerfileImage: &parse.DockerfileImage{
-						Image: &parse.Image{
-							Name:   "redis",
-							Tag:    "latest",
-							Digest: redisLatestSHA,
-						},
-						Position: 2,
-						Path:     "Dockerfile",
-					},
-				},
-				{
-					DockerfileImage: &parse.DockerfileImage{
-						Image: &parse.Image{
-							Name: "busybox",
-							Tag:  "latest",
-						},
-						Position: 1,
-						Path:     "Dockerfile",
-					},
-				},
-				{
-					ComposefileImage: &parse.ComposefileImage{
-						Image: &parse.Image{
-							Name: "busybox",
-							Tag:  "latest",
-						},
-						Position:    0,
-						Path:        "docker-compose.yml",
-						ServiceName: "svc",
-					},
-				},
-				{
-					ComposefileImage: &parse.ComposefileImage{
-						Image: &parse.Image{
-							Name: "golang",
-							Tag:  "latest",
-						},
-						Position:    0,
-						Path:        "docker-compose.yml",
-						ServiceName: "anothersvc",
-					},
-				},
-				{
-					ComposefileImage: &parse.ComposefileImage{
-						Image: &parse.Image{
-							Name:   "busybox",
-							Tag:    "latest",
-							Digest: busyboxLatestSHA,
-						},
-						Position:    1,
-						Path:        "docker-compose.yml",
-						ServiceName: "svc",
-					},
-				},
-				{
-					KubernetesfileImage: &parse.KubernetesfileImage{
-						Image: &parse.Image{
-							Name: "busybox",
-							Tag:  "latest",
-						},
-						ContainerName: "busybox",
-						ImagePosition: 1,
-						Path:          "pod.yml",
-					},
-				},
-				{
-					KubernetesfileImage: &parse.KubernetesfileImage{
-						Image: &parse.Image{
-							Name:   "golang",
-							Tag:    "latest",
-							Digest: golangLatestSHA,
-						},
-						ContainerName: "golang",
-						ImagePosition: 0,
-						Path:          "pod.yml",
-					},
-				},
+			Images: []parse.IImage{
+				test_utils.MakeImage(kind.Dockerfile, "redis", "latest", "", map[string]interface{}{
+					"position": 0,
+					"path":     "Dockerfile",
+				}),
+				test_utils.MakeImage(kind.Dockerfile, "redis", "latest", redisLatestSHA, map[string]interface{}{
+					"position": 2,
+					"path":     "Dockerfile",
+				}),
+				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", "", map[string]interface{}{
+					"position": 1,
+					"path":     "Dockerfile",
+				}),
+				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
+					"position":    0,
+					"path":        "docker-compose.yml",
+					"serviceName": "svc",
+				}),
+				test_utils.MakeImage(kind.Composefile, "golang", "latest", "", map[string]interface{}{
+					"position":    0,
+					"path":        "docker-compose.yml",
+					"serviceName": "anothersvc",
+				}),
+				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
+					"path":          "pod.yml",
+					"containerName": "busybox",
+					"docPosition":   0,
+					"imagePosition": 1,
+				}),
+				test_utils.MakeImage(kind.Composefile, "golang", "latest", golangLatestSHA, map[string]interface{}{
+					"path":          "pod.yml",
+					"containerName": "golang",
+					"docPosition":   0,
+					"imagePosition": 0,
+				}),
 			},
-			Expected: []*generate.AnyImage{
-				{
-					DockerfileImage: &parse.DockerfileImage{
-						Image: &parse.Image{
-							Name:   "redis",
-							Tag:    "latest",
-							Digest: redisLatestSHA,
-						},
-						Position: 0,
-						Path:     "Dockerfile",
-					},
-				},
-				{
-					DockerfileImage: &parse.DockerfileImage{
-						Image: &parse.Image{
-							Name:   "redis",
-							Tag:    "latest",
-							Digest: redisLatestSHA,
-						},
-						Position: 2,
-						Path:     "Dockerfile",
-					},
-				},
-				{
-					DockerfileImage: &parse.DockerfileImage{
-						Image: &parse.Image{
-							Name:   "busybox",
-							Tag:    "latest",
-							Digest: busyboxLatestSHA,
-						},
-						Position: 1,
-						Path:     "Dockerfile",
-					},
-				},
-				{
-					ComposefileImage: &parse.ComposefileImage{
-						Image: &parse.Image{
-							Name:   "busybox",
-							Tag:    "latest",
-							Digest: busyboxLatestSHA,
-						},
-						Position:    0,
-						Path:        "docker-compose.yml",
-						ServiceName: "svc",
-					},
-				},
-				{
-					ComposefileImage: &parse.ComposefileImage{
-						Image: &parse.Image{
-							Name:   "golang",
-							Tag:    "latest",
-							Digest: golangLatestSHA,
-						},
-						Position:    0,
-						Path:        "docker-compose.yml",
-						ServiceName: "anothersvc",
-					},
-				},
-				{
-					ComposefileImage: &parse.ComposefileImage{
-						Image: &parse.Image{
-							Name:   "busybox",
-							Tag:    "latest",
-							Digest: busyboxLatestSHA,
-						},
-						Position:    1,
-						Path:        "docker-compose.yml",
-						ServiceName: "svc",
-					},
-				},
-				{
-					KubernetesfileImage: &parse.KubernetesfileImage{
-						Image: &parse.Image{
-							Name:   "busybox",
-							Tag:    "latest",
-							Digest: busyboxLatestSHA,
-						},
-						ContainerName: "busybox",
-						ImagePosition: 1,
-						Path:          "pod.yml",
-					},
-				},
-				{
-					KubernetesfileImage: &parse.KubernetesfileImage{
-						Image: &parse.Image{
-							Name:   "golang",
-							Tag:    "latest",
-							Digest: golangLatestSHA,
-						},
-						ContainerName: "golang",
-						ImagePosition: 0,
-						Path:          "pod.yml",
-					},
-				},
+			Expected: []parse.IImage{
+				test_utils.MakeImage(kind.Dockerfile, "redis", "latest", redisLatestSHA, map[string]interface{}{
+					"position": 0,
+					"path":     "Dockerfile",
+				}),
+				test_utils.MakeImage(kind.Dockerfile, "redis", "latest", redisLatestSHA, map[string]interface{}{
+					"position": 2,
+					"path":     "Dockerfile",
+				}),
+				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", busyboxLatestSHA, map[string]interface{}{
+					"position": 1,
+					"path":     "Dockerfile",
+				}),
+				test_utils.MakeImage(kind.Composefile, "busybox", "latest", busyboxLatestSHA, map[string]interface{}{
+					"position":    0,
+					"path":        "docker-compose.yml",
+					"serviceName": "svc",
+				}),
+				test_utils.MakeImage(kind.Composefile, "golang", "latest", golangLatestSHA, map[string]interface{}{
+					"position":    0,
+					"path":        "docker-compose.yml",
+					"serviceName": "anothersvc",
+				}),
+				test_utils.MakeImage(kind.Composefile, "busybox", "latest", busyboxLatestSHA, map[string]interface{}{
+					"path":          "pod.yml",
+					"containerName": "busybox",
+					"docPosition":   0,
+					"imagePosition": 1,
+				}),
+				test_utils.MakeImage(kind.Composefile, "golang", "latest", golangLatestSHA, map[string]interface{}{
+					"path":          "pod.yml",
+					"containerName": "golang",
+					"docPosition":   0,
+					"imagePosition": 0,
+				}),
 			},
 			ExpectedNumNetworkCalls: 3,
 		},
@@ -246,16 +135,16 @@ func TestImageDigestUpdater(t *testing.T) {
 
 			done := make(chan struct{})
 
-			anyImages := make(chan *generate.AnyImage, len(test.AnyImages))
+			anyImages := make(chan parse.IImage, len(test.Images))
 
-			for _, anyImage := range test.AnyImages {
+			for _, anyImage := range test.Images {
 				anyImages <- anyImage
 			}
 			close(anyImages)
 
 			updatedImages := updater.UpdateDigests(anyImages, done)
 
-			var got []*generate.AnyImage
+			var got []parse.IImage
 
 			for updatedImage := range updatedImages {
 				if updatedImage.Err != nil {

@@ -17,7 +17,10 @@ type lockfile struct {
 }
 
 // TODO: windows paths
-func NewLockfile(images <-chan parse.IImage, sorters map[kind.Kind]IImageSorter) (ILockfile, error) {
+func NewLockfile(
+	images <-chan parse.IImage,
+	sorters map[kind.Kind]IImageSorter,
+) (ILockfile, error) {
 	kindImages := map[kind.Kind][]parse.IImage{}
 
 	for image := range images {
@@ -25,7 +28,7 @@ func NewLockfile(images <-chan parse.IImage, sorters map[kind.Kind]IImageSorter)
 			return nil, image.Err()
 		}
 
-		kindImages[image.Kind()] = append(kindImages[image.Kind()])
+		kindImages[image.Kind()] = append(kindImages[image.Kind()], image)
 	}
 
 	var waitGroup sync.WaitGroup
@@ -46,7 +49,6 @@ func NewLockfile(images <-chan parse.IImage, sorters map[kind.Kind]IImageSorter)
 	waitGroup.Wait()
 
 	return &lockfile{images: kindImages}, nil
-
 }
 
 // Write writes the Lockfile in JSON format to an io.Writer.

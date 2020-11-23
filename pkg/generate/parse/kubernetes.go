@@ -23,6 +23,10 @@ func NewKubernetesfileImageParser(kind kind.Kind) IKubernetesfileImageParser {
 	}
 }
 
+func (k *kubernetesfileImageParser) Kind() kind.Kind {
+	return k.kind
+}
+
 // ParseFiles reads Kubernetesfiles to parse all images.
 func (k *kubernetesfileImageParser) ParseFiles(
 	paths <-chan collect.IPath,

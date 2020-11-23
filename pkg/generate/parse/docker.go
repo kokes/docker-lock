@@ -23,6 +23,10 @@ func NewDockerfileImageParser(kind kind.Kind) IDockerfileImageParser {
 	}
 }
 
+func (d *dockerfileImageParser) Kind() kind.Kind {
+	return d.kind
+}
+
 // ParseFiles reads Dockerfiles to parse all images in FROM instructions.
 func (d *dockerfileImageParser) ParseFiles(
 	paths <-chan collect.IPath,

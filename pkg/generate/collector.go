@@ -1,23 +1,19 @@
 package generate
 
 import (
-	"fmt"
-	"reflect"
+	"errors"
 	"sync"
 
 	"github.com/safe-waters/docker-lock/pkg/generate/collect"
-	"github.com/safe-waters/docker-lock/pkg/kind"
 )
 
 type pathCollector struct {
-	collectors map[kind.Kind]collect.IPathCollector
+	collectors []collect.IPathCollector
 }
 
-func NewPathCollector(collectors map[kind.Kind]collect.IPathCollector) (IPathCollector, error) {
-	for kind, collector := range collectors {
-		if collector == nil || reflect.ValueOf(collector).IsNil() {
-			return nil, fmt.Errorf("%s collector is nil", kind)
-		}
+func NewPathCollector(collectors []collect.IPathCollector) (IPathCollector, error) {
+	if len(collectors) == 0 {
+		return nil, errors.New("collectors must be greater than 0")
 	}
 
 	return &pathCollector{collectors: collectors}, nil
@@ -33,8 +29,9 @@ func (p *pathCollector) CollectPaths(done <-chan struct{}) <-chan collect.IPath 
 
 	go func() {
 		defer waitGroup.Done()
-
 		for _, collector := range p.collectors {
+			collector := collector
+
 			waitGroup.Add(1)
 
 			go func() {

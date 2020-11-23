@@ -36,6 +36,10 @@ func NewComposefileImageParser(
 	}, nil
 }
 
+func (c *composefileImageParser) Kind() kind.Kind {
+	return c.kind
+}
+
 // ParseFiles reads docker-compose YAML to parse all images.
 func (c *composefileImageParser) ParseFiles(
 	paths <-chan collect.IPath,

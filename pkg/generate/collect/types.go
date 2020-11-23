@@ -4,6 +4,7 @@ import "github.com/safe-waters/docker-lock/pkg/kind"
 
 // IPathCollector provides an interface for PathCollector's exported methods.
 type IPathCollector interface {
+	Kind() kind.Kind
 	CollectPaths(done <-chan struct{}) <-chan IPath
 }
 

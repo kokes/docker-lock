@@ -45,6 +45,10 @@ func NewPathCollector(
 	}, nil
 }
 
+func (p *pathCollector) Kind() kind.Kind {
+	return p.kind
+}
+
 // CollectPaths gathers file paths specified by pathCollector.
 // It removes duplicates and ensures that the file paths are within
 // a subdirectory of the base directory.

@@ -25,6 +25,7 @@ type IImage interface {
 }
 
 type IImageParser interface {
+	Kind() kind.Kind
 	ParseFiles(
 		paths <-chan collect.IPath,
 		done <-chan struct{},

@@ -9,37 +9,26 @@ import (
 	"github.com/safe-waters/docker-lock/pkg/generate/registry"
 )
 
-// ImageDigestUpdater uses a WrapperManager to update Images with their most
-// recent digests from their registries.
-type ImageDigestUpdater struct {
-	WrapperManager *registry.WrapperManager
-}
-
-// IImageDigestUpdater provides an interface for ImageDigestUpdater's
-// exported methods.
-type IImageDigestUpdater interface {
-	UpdateDigests(
-		images <-chan parse.IImage,
-		done <-chan struct{},
-	) <-chan parse.IImage
+type imageDigestUpdater struct {
+	wrapperManager *registry.WrapperManager
 }
 
 // NewImageDigestUpdater returns an ImageDigestUpdater after validating its
 // fields.
 func NewImageDigestUpdater(
 	wrapperManager *registry.WrapperManager,
-) (*ImageDigestUpdater, error) {
+) (*imageDigestUpdater, error) {
 	if wrapperManager == nil {
 		return nil, errors.New("wrapperManager cannot be nil")
 	}
 
-	return &ImageDigestUpdater{WrapperManager: wrapperManager}, nil
+	return &imageDigestUpdater{wrapperManager: wrapperManager}, nil
 }
 
 // UpdateDigests queries registries for digests of images that do not
 // already specify their digests. It updates images with those
 // digests.
-func (i *ImageDigestUpdater) UpdateDigests(
+func (i *imageDigestUpdater) UpdateDigests(
 	images <-chan parse.IImage,
 	done <-chan struct{},
 ) <-chan parse.IImage {
@@ -73,7 +62,7 @@ func (i *ImageDigestUpdater) UpdateDigests(
 					return
 				}
 
-				wrapper := i.WrapperManager.Wrapper(image.Name())
+				wrapper := i.wrapperManager.Wrapper(image.Name())
 
 				digest, err := wrapper.Digest(image.Name(), image.Tag())
 				if err != nil {

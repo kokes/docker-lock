@@ -1,18 +1,24 @@
 package test_utils
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
-	"log"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"reflect"
 	"sort"
+	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
 	"github.com/safe-waters/docker-lock/pkg/kind"
 )
+
+const BusyboxLatestSHA = "bae015c28bc7cdee3b7ef20d35db4299e3068554a769070950229d9f53f58572" // nolint: lll
 
 func AssertImagesEqual(
 	t *testing.T,
@@ -21,14 +27,83 @@ func AssertImagesEqual(
 ) {
 	t.Helper()
 
-	if !reflect.DeepEqual(expected, got) {
-		log.Println(expected[0].Metadata())
-		log.Println(got[0].Metadata())
-		t.Fatalf(
-			"expected %#v, got %#v", expected, got,
-		)
+	if len(expected) != len(got) {
+		t.Fatalf("expected %d images, got %d", len(expected), len(got))
 	}
 
+	var i int
+
+	for i < len(expected) {
+		if expected[i].Kind() != got[i].Kind() {
+			t.Fatalf("expected kind %#v, got %#v", expected[i].Kind(), got[i].Kind())
+		}
+		if expected[i].Name() != got[i].Name() {
+			t.Fatalf("expected name %#v, got %#v", expected[i].Name(), got[i].Name())
+		}
+		if expected[i].Tag() != got[i].Tag() {
+			t.Fatalf("expected digest %#v, got %#v", expected[i].Tag(), got[i].Tag())
+		}
+		if expected[i].Digest() != got[i].Digest() {
+			t.Fatalf("expected digest %#v, got %#v", expected[i].Digest(), got[i].Digest())
+		}
+
+		expectedMetadataByt, err := json.MarshalIndent(expected[i].Metadata(), "", "\t")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		gotMetadataByt, err := json.MarshalIndent(got[i].Metadata(), "", "\t")
+
+		if !bytes.Equal(expectedMetadataByt, gotMetadataByt) {
+			t.Fatalf("expected metadata %#v, got %#v", string(expectedMetadataByt), string(gotMetadataByt))
+		}
+
+		i++
+	}
+}
+
+func AssertNumNetworkCallsEqual(t *testing.T, expected uint64, got uint64) {
+	t.Helper()
+
+	if expected != got {
+		t.Fatalf("expected %d network calls, got %d", expected, got)
+	}
+}
+
+func MockServer(t *testing.T, numNetworkCalls *uint64) *httptest.Server {
+	t.Helper()
+
+	server := httptest.NewServer(
+		http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+			switch url := req.URL.String(); {
+			case strings.Contains(url, "scope"):
+				byt := []byte(`{"token": "NOT_USED"}`)
+				_, err := res.Write(byt)
+				if err != nil {
+					t.Fatal(err)
+				}
+			case strings.Contains(url, "manifests"):
+				atomic.AddUint64(numNetworkCalls, 1)
+
+				urlParts := strings.Split(url, "/")
+				repo, ref := urlParts[2], urlParts[len(urlParts)-1]
+
+				var digest string
+				switch fmt.Sprintf("%s:%s", repo, ref) {
+				case "busybox:latest":
+					digest = BusyboxLatestSHA
+				default:
+					digest = fmt.Sprintf(
+						"repo %s with ref %s not defined for testing",
+						repo, ref,
+					)
+				}
+
+				res.Header().Set("Docker-Content-Digest", digest)
+			}
+		}))
+
+	return server
 }
 
 func WriteFilesToTempDir(
@@ -95,17 +170,6 @@ func MakeParentDirsInTempDirFromFilePaths(
 
 		MakeDir(t, fullDir)
 	}
-}
-
-func JsonPrettyPrint(t *testing.T, i interface{}) string {
-	t.Helper()
-
-	byt, err := json.MarshalIndent(i, "", "\t")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return string(byt)
 }
 
 func SortDockerfileImageParserResults(

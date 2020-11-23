@@ -1,12 +1,17 @@
 package update_test
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
-	cmd_generate "github.com/safe-waters/docker-lock/cmd/generate"
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
 	"github.com/safe-waters/docker-lock/pkg/generate/registry"
+	"github.com/safe-waters/docker-lock/pkg/generate/registry/contrib"
+	"github.com/safe-waters/docker-lock/pkg/generate/registry/firstparty"
 	"github.com/safe-waters/docker-lock/pkg/generate/update"
+	"github.com/safe-waters/docker-lock/pkg/kind"
+	"github.com/safe-waters/docker-lock/pkg/test_utils"
 )
 
 func TestImageDigestUpdater(t *testing.T) {
@@ -14,43 +19,28 @@ func TestImageDigestUpdater(t *testing.T) {
 
 	tests := []struct {
 		Name                    string
-		Images                  []*parse.Image
+		Images                  []parse.IImage
 		ExpectedNumNetworkCalls uint64
-		ExpectedImages          []*parse.Image
+		ExpectedImages          []parse.IImage
 	}{
 		{
 			Name: "Image Without Digest",
-			Images: []*parse.Image{
-				{
-					Name: "busybox",
-					Tag:  "latest",
-				},
+			Images: []parse.IImage{
+				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", "", nil),
 			},
 			ExpectedNumNetworkCalls: 1,
-			ExpectedImages: []*parse.Image{
-				{
-					Name:   "busybox",
-					Tag:    "latest",
-					Digest: busyboxLatestSHA,
-				},
+			ExpectedImages: []parse.IImage{
+				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", test_utils.BusyboxLatestSHA, nil),
 			},
 		},
 		{
 			Name: "Image With Digest",
-			Images: []*parse.Image{
-				{
-					Name:   "busybox",
-					Tag:    "latest",
-					Digest: busyboxLatestSHA,
-				},
+			Images: []parse.IImage{
+				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", test_utils.BusyboxLatestSHA, nil),
 			},
 			ExpectedNumNetworkCalls: 0,
-			ExpectedImages: []*parse.Image{
-				{
-					Name:   "busybox",
-					Tag:    "latest",
-					Digest: busyboxLatestSHA,
-				},
+			ExpectedImages: []parse.IImage{
+				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", test_utils.BusyboxLatestSHA, nil),
 			},
 		},
 	}
@@ -63,7 +53,7 @@ func TestImageDigestUpdater(t *testing.T) {
 
 			var gotNumNetworkCalls uint64
 
-			server := mockServer(t, &gotNumNetworkCalls)
+			server := test_utils.MockServer(t, &gotNumNetworkCalls)
 			defer server.Close()
 
 			client := &registry.HTTPClient{
@@ -72,8 +62,12 @@ func TestImageDigestUpdater(t *testing.T) {
 				TokenURL:    server.URL + "?scope=repository%s",
 			}
 
-			wrapperManager, err := cmd_generate.DefaultWrapperManager(
-				client, cmd_generate.DefaultConfigPath(),
+			// wrapperManager, err := cmd_generate.DefaultWrapperManager(
+			// 	client, cmd_generate.DefaultConfigPath(),
+			// )
+			// TODO: add back
+			wrapperManager, err := DefaultWrapperManager(
+				client, DefaultConfigPath(),
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -86,7 +80,7 @@ func TestImageDigestUpdater(t *testing.T) {
 
 			done := make(chan struct{})
 
-			images := make(chan *parse.Image, len(test.Images))
+			images := make(chan parse.IImage, len(test.Images))
 
 			for _, image := range test.Images {
 				images <- image
@@ -95,22 +89,55 @@ func TestImageDigestUpdater(t *testing.T) {
 
 			updatedImages := updater.UpdateDigests(images, done)
 
-			var gotImages []*parse.Image
+			var gotImages []parse.IImage
 
 			for updatedImage := range updatedImages {
-				if updatedImage.Err != nil {
-					t.Fatal(updatedImage.Err)
+				if updatedImage.Err() != nil {
+					t.Fatal(updatedImage.Err())
 				}
-				gotImages = append(gotImages, updatedImage.Image)
+				gotImages = append(gotImages, updatedImage)
 			}
 
-			assertImagesEqual(
+			test_utils.AssertImagesEqual(
 				t, test.ExpectedImages, gotImages,
 			)
 
-			assertNumNetworkCallsEqual(
+			test_utils.AssertNumNetworkCallsEqual(
 				t, test.ExpectedNumNetworkCalls, gotNumNetworkCalls,
 			)
 		})
 	}
+}
+
+// TODO: remove all below
+
+func DefaultWrapperManager(
+	client *registry.HTTPClient,
+	configPath string,
+) (*registry.WrapperManager, error) {
+	defaultWrapper, err := firstparty.DefaultWrapper(client, configPath)
+	if err != nil {
+		return nil, err
+	}
+
+	wrapperManager := registry.NewWrapperManager(defaultWrapper)
+	wrapperManager.Add(firstparty.AllWrappers(client, configPath)...)
+	wrapperManager.Add(contrib.AllWrappers(client, configPath)...)
+
+	return wrapperManager, nil
+}
+
+// DefaultConfigPath returns the default location of docker's config.json
+// for all platforms.
+func DefaultConfigPath() string {
+	if homeDir, err := os.UserHomeDir(); err == nil {
+		configPath := filepath.Join(homeDir, ".docker", "config.json")
+		if _, err := os.Stat(configPath); err != nil {
+			return ""
+		}
+
+		return configPath
+	}
+
+	return ""
 }

@@ -172,8 +172,6 @@ spec:
 			}
 
 			sortImages(test.Expected)
-			sortImages(test.Expected)
-			sortImages(got)
 			sortImages(got)
 
 			test_utils.AssertImagesEqual(t, test.Expected, got)
@@ -190,8 +188,8 @@ func sortImages(images []parse.IImage) {
 			return images[i].Metadata()["path"].(string) < images[j].Metadata()["path"].(string)
 		}
 
-		_, ok1 := images[i].Metadata()["serviceName"].(int)
-		_, ok2 := images[j].Metadata()["serviceName"].(int)
+		_, ok1 := images[i].Metadata()["serviceName"].(string)
+		_, ok2 := images[j].Metadata()["serviceName"].(string)
 
 		if ok1 && ok2 {
 			return images[i].Metadata()["serviceName"].(string) < images[j].Metadata()["serviceName"].(string)

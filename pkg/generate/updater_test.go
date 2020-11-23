@@ -158,10 +158,6 @@ func TestImageDigestUpdater(t *testing.T) {
 			}
 
 			sortImages(test.Expected)
-			sortImages(test.Expected)
-			sortImages(test.Expected)
-			sortImages(got)
-			sortImages(got)
 			sortImages(got)
 
 			test_utils.AssertImagesEqual(t, test.Expected, got)

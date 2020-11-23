@@ -17,7 +17,6 @@ func NewImageDigestUpdater(
 	updater update.IImageDigestUpdater,
 	ignoreMissingDigests bool,
 ) (IImageDigestUpdater, error) {
-
 	return &imageDigestUpdater{
 		updater:              updater,
 		ignoreMissingDigests: ignoreMissingDigests,

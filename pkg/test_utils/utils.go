@@ -2,6 +2,7 @@ package test_utils
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -242,4 +243,28 @@ func MakeImage(
 	metadata map[string]interface{},
 ) parse.IImage {
 	return parse.NewImage(kind, name, tag, digest, metadata, nil)
+}
+
+func MakeTempDirInCurrentDir(t *testing.T) string {
+	t.Helper()
+
+	tempDir := generateUUID(t)
+	MakeDir(t, tempDir)
+
+	return tempDir
+}
+
+func generateUUID(t *testing.T) string {
+	b := make([]byte, 16)
+
+	_, err := rand.Read(b)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	uuid := fmt.Sprintf("%x-%x-%x-%x-%x",
+		b[0:4], b[4:6], b[6:8], b[8:10], b[10:],
+	)
+
+	return uuid
 }

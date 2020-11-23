@@ -5,6 +5,8 @@ import (
 	"errors"
 	"io"
 	"reflect"
+
+	"github.com/safe-waters/docker-lock/pkg/kind"
 )
 
 // Generator creates a Lockfile.
@@ -12,6 +14,7 @@ type Generator struct {
 	PathCollector      IPathCollector
 	ImageParser        IImageParser
 	ImageDigestUpdater IImageDigestUpdater
+	ImageSorters       map[kind.Kind]IImageSorter
 }
 
 // IGenerator provides an interface for Generator's exported
@@ -25,6 +28,7 @@ func NewGenerator(
 	pathCollector IPathCollector,
 	imageParser IImageParser,
 	imageDigestUpdater IImageDigestUpdater,
+	imageSorters map[kind.Kind]IImageSorter,
 ) (*Generator, error) {
 	if pathCollector == nil || reflect.ValueOf(pathCollector).IsNil() {
 		return nil, errors.New("pathCollector may not be nil")
@@ -39,10 +43,15 @@ func NewGenerator(
 		return nil, errors.New("imageDigestUpdater may not be nil")
 	}
 
+	if len(imageSorters) == 0 {
+		return nil, errors.New("imageSorters may not be nil")
+	}
+
 	return &Generator{
 		PathCollector:      pathCollector,
 		ImageParser:        imageParser,
 		ImageDigestUpdater: imageDigestUpdater,
+		ImageSorters:       imageSorters,
 	}, nil
 }
 
@@ -58,7 +67,7 @@ func (g *Generator) GenerateLockfile(writer io.Writer) error {
 	images := g.ImageParser.ParseFiles(paths, done)
 	imagesWithDigests := g.ImageDigestUpdater.UpdateDigests(images, done)
 
-	lockfile, err := NewLockfile(imagesWithDigests)
+	lockfile, err := NewLockfile(imagesWithDigests, g.ImageSorters)
 	if err != nil {
 		close(done)
 		return err

@@ -47,6 +47,8 @@ func (i *imageParser) ParseFiles(
 		var kindPathsWaitGroup sync.WaitGroup
 
 		for path := range paths {
+			path := path
+
 			kindPathsWaitGroup.Add(1)
 
 			go func() {
@@ -68,6 +70,9 @@ func (i *imageParser) ParseFiles(
 		}()
 
 		for kind, paths := range kindPaths {
+			kind := kind
+			paths := paths
+
 			waitGroup.Add(1)
 
 			go func() {

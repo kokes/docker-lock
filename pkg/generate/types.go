@@ -1,6 +1,8 @@
 package generate
 
 import (
+	"io"
+
 	"github.com/safe-waters/docker-lock/pkg/generate/collect"
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
 )
@@ -18,3 +20,9 @@ type IImageDigestUpdater interface {
 		images <-chan parse.IImage, done <-chan struct{},
 	) <-chan parse.IImage
 }
+
+type ILockfile interface {
+	Write(writer io.Writer) error
+}
+
+type IImageSorter func(i int, j int) bool

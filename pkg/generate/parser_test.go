@@ -3,10 +3,14 @@ package generate_test
 import (
 	"os"
 	"path/filepath"
+	"sort"
 	"testing"
 
 	"github.com/safe-waters/docker-lock/pkg/generate"
+	"github.com/safe-waters/docker-lock/pkg/generate/collect"
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
+	"github.com/safe-waters/docker-lock/pkg/kind"
+	"github.com/safe-waters/docker-lock/pkg/test_utils"
 )
 
 func TestImageParser(t *testing.T) {
@@ -20,10 +24,11 @@ func TestImageParser(t *testing.T) {
 		ComposefileContents    [][]byte
 		DockerfileContents     [][]byte
 		KubernetesfileContents [][]byte
-		Expected               []*generate.AnyImage
+		Expected               []parse.IImage
 	}{
 		{
-			Name:                "Dockerfiles, Composefiles, And Kubernetesfiles", // nolint: lll
+			Name: "Dockerfiles, Composefiles, And Kubernetesfiles", // nolint: lll
+
 			DockerfilePaths:     []string{"Dockerfile"},
 			ComposefilePaths:    []string{"docker-compose.yml"},
 			KubernetesfilePaths: []string{"pod.yml"},
@@ -59,53 +64,31 @@ spec:
     - containerPort: 80
 `),
 			},
-			Expected: []*generate.AnyImage{
-				{
-					DockerfileImage: &parse.DockerfileImage{
-						Image:    &parse.Image{Name: "ubuntu", Tag: "bionic"},
-						Position: 0,
-						Path:     "Dockerfile",
-					},
-				},
-				{
-					DockerfileImage: &parse.DockerfileImage{
-						Image:    &parse.Image{Name: "busybox", Tag: "latest"},
-						Position: 1,
-						Path:     "Dockerfile",
-					},
-				},
-				{
-					ComposefileImage: &parse.ComposefileImage{
-						Image: &parse.Image{
-							Name: "busybox",
-							Tag:  "latest",
-						},
-						Position:    0,
-						Path:        "docker-compose.yml",
-						ServiceName: "svc",
-					},
-				},
-				{
-					ComposefileImage: &parse.ComposefileImage{
-						Image: &parse.Image{
-							Name: "golang",
-							Tag:  "latest",
-						},
-						Position:    0,
-						Path:        "docker-compose.yml",
-						ServiceName: "anothersvc",
-					},
-				},
-				{
-					KubernetesfileImage: &parse.KubernetesfileImage{
-						Image: &parse.Image{
-							Name: "redis",
-							Tag:  "latest",
-						},
-						ContainerName: "redis",
-						Path:          "pod.yml",
-					},
-				},
+			Expected: []parse.IImage{
+				test_utils.MakeImage(kind.Dockerfile, "ubuntu", "bionic", "", map[string]interface{}{
+					"position": 0,
+					"path":     "Dockerfile",
+				}),
+				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", "", map[string]interface{}{
+					"position": 1,
+					"path":     "Dockerfile",
+				}),
+				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
+					"position":    0,
+					"path":        "docker-compose.yml",
+					"serviceName": "svc",
+				}),
+				test_utils.MakeImage(kind.Composefile, "golang", "latest", "", map[string]interface{}{
+					"position":    0,
+					"path":        "docker-compose.yml",
+					"serviceName": "anothersvc",
+				}),
+				test_utils.MakeImage(kind.Kubernetesfile, "redis", "latest", "", map[string]interface{}{
+					"path":          "pod.yml",
+					"imagePosition": 0,
+					"docPosition":   0,
+					"containerName": "redis",
+				}),
 			},
 		},
 	}
@@ -116,89 +99,116 @@ spec:
 		t.Run(test.Name, func(t *testing.T) {
 			t.Parallel()
 
-			tempDir := makeTempDir(t, "")
+			tempDir := test_utils.MakeTempDir(t, "")
 			defer os.RemoveAll(tempDir)
 
-			dockerfilePaths := writeFilesToTempDir(
+			dockerfilePaths := test_utils.WriteFilesToTempDir(
 				t, tempDir, test.DockerfilePaths, test.DockerfileContents,
 			)
-			composefilePaths := writeFilesToTempDir(
+			composefilePaths := test_utils.WriteFilesToTempDir(
 				t, tempDir, test.ComposefilePaths, test.ComposefileContents,
 			)
-			kubernetesfilePaths := writeFilesToTempDir(
+			kubernetesfilePaths := test_utils.WriteFilesToTempDir(
 				t, tempDir, test.KubernetesfilePaths,
 				test.KubernetesfileContents,
 			)
 
 			anyPaths := make(
-				chan *generate.AnyPath,
+				chan collect.IPath,
 				len(dockerfilePaths)+
 					len(composefilePaths)+
 					len(kubernetesfilePaths),
 			)
 			for _, path := range dockerfilePaths {
-				anyPaths <- &generate.AnyPath{DockerfilePath: path}
+				anyPaths <- collect.NewPath(kind.Dockerfile, path, nil)
 			}
 			for _, path := range composefilePaths {
-				anyPaths <- &generate.AnyPath{ComposefilePath: path}
+				anyPaths <- collect.NewPath(kind.Composefile, path, nil)
 			}
 			for _, path := range kubernetesfilePaths {
-				anyPaths <- &generate.AnyPath{KubernetesfilePath: path}
+				anyPaths <- collect.NewPath(kind.Kubernetesfile, path, nil)
 			}
+
 			close(anyPaths)
 
-			done := make(chan struct{})
+			dockerfileImageParser := parse.NewDockerfileImageParser(kind.Dockerfile)
+			composefileImageParser, err := parse.NewComposefileImageParser(kind.Composefile, dockerfileImageParser)
+			if err != nil {
+				t.Fatal(err)
+			}
+			kubernetesfileImageParser := parse.NewKubernetesfileImageParser(kind.Kubernetesfile)
 
-			dockerfileImageParser := &parse.DockerfileImageParser{}
+			imageParser, err := generate.NewImageParser(map[kind.Kind]parse.IImageParser{
+				kind.Dockerfile:     dockerfileImageParser,
+				kind.Composefile:    composefileImageParser,
+				kind.Kubernetesfile: kubernetesfileImageParser,
+			})
 
-			composefileImageParser, err := parse.NewComposefileImageParser(
-				dockerfileImageParser,
-			)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			kubernetesfileImageParser := &parse.KubernetesfileImageParser{}
+			done := make(chan struct{})
+			defer close(done)
 
-			imageParser := &generate.ImageParser{
-				DockerfileImageParser:     dockerfileImageParser,
-				ComposefileImageParser:    composefileImageParser,
-				KubernetesfileImageParser: kubernetesfileImageParser,
-			}
 			anyImages := imageParser.ParseFiles(anyPaths, done)
 
-			var got []*generate.AnyImage
+			var got []parse.IImage
 
 			for anyImage := range anyImages {
-				if anyImage.Err != nil {
-					close(done)
-					t.Fatal(anyImage.Err)
+				if anyImage.Err() != nil {
+					t.Fatal(anyImage.Err())
 				}
 				got = append(got, anyImage)
 			}
 
 			for _, anyImage := range test.Expected {
-				switch {
-				case anyImage.DockerfileImage != nil:
-					anyImage.DockerfileImage.Path = filepath.Join(
-						tempDir, anyImage.DockerfileImage.Path,
-					)
+				metadata := anyImage.Metadata()
+				metadata["path"] = filepath.Join(
+					tempDir, anyImage.Metadata()["path"].(string),
+				)
 
-				case anyImage.ComposefileImage != nil:
-					anyImage.ComposefileImage.Path = filepath.Join(
-						tempDir, anyImage.ComposefileImage.Path,
-					)
-				case anyImage.KubernetesfileImage != nil:
-					anyImage.KubernetesfileImage.Path = filepath.Join(
-						tempDir, anyImage.KubernetesfileImage.Path,
-					)
-				}
+				anyImage.SetMetadata(metadata)
 			}
 
-			sortedExpected := sortAnyImages(t, test.Expected)
-			sortedGot := sortAnyImages(t, got)
+			sortImages(test.Expected)
+			sortImages(test.Expected)
+			sortImages(got)
+			sortImages(got)
 
-			assertAnyImagesEqual(t, sortedExpected, sortedGot)
+			test_utils.AssertImagesEqual(t, test.Expected, got)
 		})
 	}
+}
+
+func sortImages(images []parse.IImage) {
+	sort.Slice(images, func(i int, j int) bool {
+		switch {
+		case images[i].Kind() != images[j].Kind():
+			return images[i].Kind() < images[j].Kind()
+		case images[i].Metadata()["path"].(string) != images[j].Metadata()["path"].(string):
+			return images[i].Metadata()["path"].(string) < images[j].Metadata()["path"].(string)
+		}
+
+		_, ok1 := images[i].Metadata()["serviceName"].(int)
+		_, ok2 := images[j].Metadata()["serviceName"].(int)
+
+		if ok1 && ok2 {
+			return images[i].Metadata()["serviceName"].(string) < images[j].Metadata()["serviceName"].(string)
+		}
+
+		_, ok1 = images[i].Metadata()["position"].(int)
+		_, ok2 = images[j].Metadata()["position"].(int)
+
+		if ok1 && ok2 {
+			return images[i].Metadata()["position"].(int) < images[j].Metadata()["position"].(int)
+		}
+
+		switch {
+		case images[i].Metadata()["docPosition"].(int) != images[j].Metadata()["docPosition"].(int):
+			return images[i].Metadata()["docPosition"].(int) <= images[j].Metadata()["docPosition"].(int)
+		default:
+			return images[i].Metadata()["imagePosition"].(int) < images[j].Metadata()["imagePosition"].(int)
+		}
+	})
 }

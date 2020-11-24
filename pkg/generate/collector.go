@@ -29,6 +29,7 @@ func (p *pathCollector) CollectPaths(done <-chan struct{}) <-chan collect.IPath 
 
 	go func() {
 		defer waitGroup.Done()
+
 		for _, collector := range p.collectors {
 			collector := collector
 

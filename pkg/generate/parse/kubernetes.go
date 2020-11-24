@@ -17,9 +17,9 @@ type kubernetesfileImageParser struct {
 	kind kind.Kind
 }
 
-func NewKubernetesfileImageParser(kind kind.Kind) IKubernetesfileImageParser {
+func NewKubernetesfileImageParser() IKubernetesfileImageParser {
 	return &kubernetesfileImageParser{
-		kind: kind,
+		kind: kind.Kubernetesfile,
 	}
 }
 
@@ -120,13 +120,13 @@ func (k *kubernetesfileImageParser) ParseFile(
 		waitGroup.Add(1)
 
 		go k.parseDoc(
-			path.Path(), doc, kubernetesfileImages, docPosition, done, waitGroup,
+			path, doc, kubernetesfileImages, docPosition, done, waitGroup,
 		)
 	}
 }
 
 func (k *kubernetesfileImageParser) parseDoc(
-	path string,
+	path collect.IPath,
 	doc interface{},
 	kubernetesfileImages chan<- IImage,
 	docPosition int,
@@ -143,7 +143,7 @@ func (k *kubernetesfileImageParser) parseDoc(
 }
 
 func (k *kubernetesfileImageParser) parseDocRecursive(
-	path string,
+	path collect.IPath,
 	doc interface{},
 	kubernetesfileImages chan<- IImage,
 	docPosition int,
@@ -171,7 +171,7 @@ func (k *kubernetesfileImageParser) parseDocRecursive(
 		if name != "" && imageLine != "" {
 			image := NewImage(k.kind, "", "", "", map[string]interface{}{
 				"containerName": name,
-				"path":          path,
+				"path":          path.Path(),
 				"imagePosition": *imagePosition,
 				"docPosition":   docPosition,
 			}, nil)

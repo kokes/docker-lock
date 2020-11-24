@@ -39,9 +39,9 @@ services:
 			},
 			Expected: []parse.IImage{
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"path":        "docker-compose.yml",
-					"position":    0,
-					"serviceName": "svc",
+					"path":            "docker-compose.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc",
 				}),
 			},
 		},
@@ -58,9 +58,9 @@ services:
 			},
 			Expected: []parse.IImage{
 				test_utils.MakeImage(kind.Composefile, "scratch", "", "", map[string]interface{}{
-					"path":        "docker-compose.yml",
-					"position":    0,
-					"serviceName": "svc",
+					"path":            "docker-compose.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc",
 				}),
 			},
 		},
@@ -80,10 +80,10 @@ services:
 			DockerfileContents: [][]byte{[]byte(`FROM busybox`)},
 			Expected: []parse.IImage{
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"path":           "docker-compose.yml",
-					"position":       0,
-					"serviceName":    "svc",
-					"dockerfilePath": filepath.Join("build", "Dockerfile"),
+					"path":            "docker-compose.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc",
+					"dockerfilePath":  filepath.Join("build", "Dockerfile"),
 				}),
 			},
 		},
@@ -106,10 +106,10 @@ services:
 			DockerfileContents: [][]byte{[]byte(`FROM busybox`)},
 			Expected: []parse.IImage{
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"path":           "docker-compose.yml",
-					"position":       0,
-					"serviceName":    "svc",
-					"dockerfilePath": filepath.Join("dockerfile", "Dockerfile"),
+					"path":            "docker-compose.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc",
+					"dockerfilePath":  filepath.Join("dockerfile", "Dockerfile"),
 				}),
 			},
 		},
@@ -133,10 +133,10 @@ services:
 			DockerfileContents: [][]byte{[]byte(`FROM busybox`)},
 			Expected: []parse.IImage{
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"path":           "docker-compose.yml",
-					"position":       0,
-					"serviceName":    "svc",
-					"dockerfilePath": filepath.Join("dockerfile", "Dockerfile"),
+					"path":            "docker-compose.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc",
+					"dockerfilePath":  filepath.Join("dockerfile", "Dockerfile"),
 				}),
 			},
 		},
@@ -162,10 +162,10 @@ services:
 			DockerfileContents: [][]byte{[]byte(`FROM busybox`)},
 			Expected: []parse.IImage{
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"path":           "docker-compose.yml",
-					"position":       0,
-					"serviceName":    "svc",
-					"dockerfilePath": filepath.Join("dockerfile", "Dockerfile"),
+					"path":            "docker-compose.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc",
+					"dockerfilePath":  filepath.Join("dockerfile", "Dockerfile"),
 				}),
 			},
 		},
@@ -187,9 +187,9 @@ services:
 			},
 			Expected: []parse.IImage{
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"path":        "docker-compose.yml",
-					"position":    0,
-					"serviceName": "svc",
+					"path":            "docker-compose.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc",
 				}),
 			},
 		},
@@ -214,9 +214,9 @@ services:
 			},
 			Expected: []parse.IImage{
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"path":        "docker-compose.yml",
-					"position":    0,
-					"serviceName": "svc",
+					"path":            "docker-compose.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc",
 				}),
 			},
 		},
@@ -247,10 +247,10 @@ FROM ${DOT_ENV_ARGS_ENV_LIST_IMAGE}
 `)},
 			Expected: []parse.IImage{
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"path":           "docker-compose.yml",
-					"position":       0,
-					"serviceName":    "svc",
-					"dockerfilePath": "Dockerfile",
+					"path":            "docker-compose.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc",
+					"dockerfilePath":  "Dockerfile",
 				}),
 			},
 		},
@@ -279,10 +279,10 @@ FROM ${ARGS_ENV_LIST_IMAGE}
 `)},
 			Expected: []parse.IImage{
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"path":           "docker-compose.yml",
-					"position":       0,
-					"serviceName":    "svc",
-					"dockerfilePath": "Dockerfile",
+					"path":            "docker-compose.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc",
+					"dockerfilePath":  "Dockerfile",
 				}),
 			},
 		},
@@ -308,10 +308,10 @@ FROM ${IMAGE}
 `)},
 			Expected: []parse.IImage{
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"path":           "docker-compose.yml",
-					"position":       0,
-					"serviceName":    "svc",
-					"dockerfilePath": "Dockerfile",
+					"path":            "docker-compose.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc",
+					"dockerfilePath":  "Dockerfile",
 				}),
 			},
 		},
@@ -337,10 +337,10 @@ FROM ${IMAGE}
 `)},
 			Expected: []parse.IImage{
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"path":           "docker-compose.yml",
-					"position":       0,
-					"serviceName":    "svc",
-					"dockerfilePath": "Dockerfile",
+					"path":            "docker-compose.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc",
+					"dockerfilePath":  "Dockerfile",
 				}),
 			},
 		},
@@ -366,10 +366,10 @@ FROM ${IMAGE}
 `)},
 			Expected: []parse.IImage{
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"path":           "docker-compose.yml",
-					"position":       0,
-					"serviceName":    "svc",
-					"dockerfilePath": "Dockerfile",
+					"path":            "docker-compose.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc",
+					"dockerfilePath":  "Dockerfile",
 				}),
 			},
 		},
@@ -393,10 +393,10 @@ FROM ${IMAGE}
 `)},
 			Expected: []parse.IImage{
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"path":           "docker-compose.yml",
-					"position":       0,
-					"serviceName":    "svc",
-					"dockerfilePath": "Dockerfile",
+					"path":            "docker-compose.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc",
+					"dockerfilePath":  "Dockerfile",
 				}),
 			},
 		},
@@ -430,16 +430,16 @@ services:
 			},
 			Expected: []parse.IImage{
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"path":           "docker-compose-one.yml",
-					"position":       0,
-					"serviceName":    "svc-one",
-					"dockerfilePath": filepath.Join("one", "Dockerfile"),
+					"path":            "docker-compose-one.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc-one",
+					"dockerfilePath":  filepath.Join("one", "Dockerfile"),
 				}),
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"path":           "docker-compose-two.yml",
-					"position":       0,
-					"serviceName":    "svc-two",
-					"dockerfilePath": filepath.Join("two", "Dockerfile"),
+					"path":            "docker-compose-two.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc-two",
+					"dockerfilePath":  filepath.Join("two", "Dockerfile"),
 				}),
 			},
 		},
@@ -467,16 +467,16 @@ services:
 			},
 			Expected: []parse.IImage{
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"path":           "docker-compose.yml",
-					"position":       0,
-					"serviceName":    "svc-one",
-					"dockerfilePath": filepath.Join("one", "Dockerfile"),
+					"path":            "docker-compose.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc-one",
+					"dockerfilePath":  filepath.Join("one", "Dockerfile"),
 				}),
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"path":           "docker-compose.yml",
-					"position":       0,
-					"serviceName":    "svc-two",
-					"dockerfilePath": filepath.Join("two", "Dockerfile"),
+					"path":            "docker-compose.yml",
+					"servicePosition": 0,
+					"serviceName":     "svc-two",
+					"dockerfilePath":  filepath.Join("two", "Dockerfile"),
 				}),
 			},
 		},
@@ -529,8 +529,7 @@ services:
 			done := make(chan struct{})
 
 			composefileParser, err := parse.NewComposefileImageParser(
-				kind.Composefile,
-				parse.NewDockerfileImageParser(kind.Dockerfile),
+				parse.NewDockerfileImageParser(),
 			)
 			if err != nil {
 				t.Fatal(err)

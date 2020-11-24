@@ -23,7 +23,6 @@ type composefileImageParser struct {
 // NewComposefileImageParser returns a composefileImageParser after validating
 // its fields.
 func NewComposefileImageParser(
-	kind kind.Kind,
 	dockerfileImageParser IDockerfileImageParser,
 ) (IComposefileImageParser, error) {
 	if dockerfileImageParser == nil {
@@ -31,7 +30,7 @@ func NewComposefileImageParser(
 	}
 
 	return &composefileImageParser{
-		kind:                  kind,
+		kind:                  kind.Composefile,
 		dockerfileImageParser: dockerfileImageParser,
 	}, nil
 }
@@ -174,9 +173,9 @@ func (c *composefileImageParser) parseService(
 
 	if serviceConfig.Build.Context == "" {
 		image := NewImage(c.kind, "", "", "", map[string]interface{}{
-			"serviceName": serviceConfig.Name,
-			"position":    0,
-			"path":        path.Path(),
+			"serviceName":     serviceConfig.Name,
+			"servicePosition": 0,
+			"path":            path.Path(),
 		}, nil)
 
 		image.SetNameTagDigestFromImageLine(serviceConfig.Image)
@@ -250,10 +249,10 @@ func (c *composefileImageParser) parseService(
 		}
 
 		dockerfileImage.SetMetadata(map[string]interface{}{
-			"dockerfilePath": dockerfileImage.Metadata()["path"],
-			"position":       dockerfileImage.Metadata()["position"],
-			"serviceName":    serviceConfig.Name,
-			"path":           path.Path(),
+			"dockerfilePath":  dockerfileImage.Metadata()["path"],
+			"servicePosition": dockerfileImage.Metadata()["position"],
+			"serviceName":     serviceConfig.Name,
+			"path":            path.Path(),
 		})
 
 		select {

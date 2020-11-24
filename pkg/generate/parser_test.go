@@ -131,12 +131,12 @@ spec:
 
 			close(anyPaths)
 
-			dockerfileImageParser := parse.NewDockerfileImageParser(kind.Dockerfile)
-			composefileImageParser, err := parse.NewComposefileImageParser(kind.Composefile, dockerfileImageParser)
+			dockerfileImageParser := parse.NewDockerfileImageParser()
+			composefileImageParser, err := parse.NewComposefileImageParser(dockerfileImageParser)
 			if err != nil {
 				t.Fatal(err)
 			}
-			kubernetesfileImageParser := parse.NewKubernetesfileImageParser(kind.Kubernetesfile)
+			kubernetesfileImageParser := parse.NewKubernetesfileImageParser()
 
 			imageParser, err := generate.NewImageParser(dockerfileImageParser, composefileImageParser, kubernetesfileImageParser)
 

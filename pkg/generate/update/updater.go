@@ -17,7 +17,7 @@ type imageDigestUpdater struct {
 // fields.
 func NewImageDigestUpdater(
 	wrapperManager *registry.WrapperManager,
-) (*imageDigestUpdater, error) {
+) (IImageDigestUpdater, error) {
 	if wrapperManager == nil {
 		return nil, errors.New("wrapperManager cannot be nil")
 	}

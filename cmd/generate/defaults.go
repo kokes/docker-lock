@@ -91,14 +91,13 @@ func DefaultImageParser(flags *Flags) (generate.IImageParser, error) {
 
 	if !flags.DockerfileFlags.ExcludePaths ||
 		!flags.ComposefileFlags.ExcludePaths {
-		dockerfileImageParser = parse.NewDockerfileImageParser(kind.Dockerfile)
+		dockerfileImageParser = parse.NewDockerfileImageParser()
 	}
 
 	if !flags.ComposefileFlags.ExcludePaths {
 		var err error
 
 		composefileImageParser, err = parse.NewComposefileImageParser(
-			kind.Composefile,
 			dockerfileImageParser,
 		)
 
@@ -108,7 +107,7 @@ func DefaultImageParser(flags *Flags) (generate.IImageParser, error) {
 	}
 
 	if !flags.KubernetesfileFlags.ExcludePaths {
-		kubernetesfileImageParser = parse.NewKubernetesfileImageParser(kind.Kubernetesfile)
+		kubernetesfileImageParser = parse.NewKubernetesfileImageParser()
 	}
 
 	return generate.NewImageParser(dockerfileImageParser, composefileImageParser, kubernetesfileImageParser)

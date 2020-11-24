@@ -230,7 +230,7 @@ func SortComposefileImageParserResults(
 		case results[i].Metadata()["dockerfilePath"].(string) != results[j].Metadata()["dockerfilePath"].(string):
 			return results[i].Metadata()["dockerfilePath"].(string) < results[j].Metadata()["dockerfilePath"].(string)
 		default:
-			return results[i].Metadata()["position"].(int) < results[j].Metadata()["position"].(int)
+			return results[i].Metadata()["servicePosition"].(int) < results[j].Metadata()["servicePosition"].(int)
 		}
 	})
 }

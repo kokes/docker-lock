@@ -80,6 +80,7 @@ func (i *imageDigestUpdater) UpdateDigests(
 		for updatedImage := range i.updater.UpdateDigests(
 			imagesWithoutDigests, done,
 		) {
+			// TODO: distinguish these errors.
 			if updatedImage.Err() != nil && !i.ignoreMissingDigests {
 				select {
 				case <-done:

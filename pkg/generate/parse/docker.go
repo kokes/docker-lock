@@ -12,14 +12,13 @@ import (
 	"github.com/safe-waters/docker-lock/pkg/kind"
 )
 
-// dockerfileImageParser extracts image values from Dockerfiles.
 type dockerfileImageParser struct {
 	kind kind.Kind
 }
 
-func NewDockerfileImageParser(kind kind.Kind) IDockerfileImageParser {
+func NewDockerfileImageParser() IDockerfileImageParser {
 	return &dockerfileImageParser{
-		kind: kind,
+		kind: kind.Dockerfile,
 	}
 }
 

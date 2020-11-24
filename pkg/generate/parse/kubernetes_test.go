@@ -209,7 +209,7 @@ spec:
 
 			done := make(chan struct{})
 
-			kubernetesfileParser := parse.NewKubernetesfileImageParser(kind.Kubernetesfile)
+			kubernetesfileParser := parse.NewKubernetesfileImageParser()
 			kubernetesfileImages := kubernetesfileParser.ParseFiles(
 				pathsToParseCh, done,
 			)

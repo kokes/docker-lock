@@ -245,7 +245,7 @@ FROM
 
 			done := make(chan struct{})
 
-			dockerfileParser := parse.NewDockerfileImageParser(kind.Dockerfile)
+			dockerfileParser := parse.NewDockerfileImageParser()
 			dockerfileImages := dockerfileParser.ParseFiles(
 				pathsToParseCh, done,
 			)

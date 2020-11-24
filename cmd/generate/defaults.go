@@ -8,11 +8,11 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/safe-waters/docker-lock/pkg/generate"
 	"github.com/safe-waters/docker-lock/pkg/generate/collect"
+	"github.com/safe-waters/docker-lock/pkg/generate/format"
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
 	"github.com/safe-waters/docker-lock/pkg/generate/registry"
 	"github.com/safe-waters/docker-lock/pkg/generate/registry/contrib"
 	"github.com/safe-waters/docker-lock/pkg/generate/registry/firstparty"
-	"github.com/safe-waters/docker-lock/pkg/generate/sort"
 	"github.com/safe-waters/docker-lock/pkg/generate/update"
 	"github.com/safe-waters/docker-lock/pkg/kind"
 )
@@ -113,12 +113,12 @@ func DefaultImageParser(flags *Flags) (generate.IImageParser, error) {
 	return generate.NewImageParser(dockerfileImageParser, composefileImageParser, kubernetesfileImageParser)
 }
 
-func DefaultImageSorter() (generate.IImageSorter, error) {
-	dockerfileImageSorter := sort.NewDockerfileImageSorter(kind.Dockerfile)
-	composefileImageSorter := sort.NewComposefileImageSorter(kind.Composefile)
-	kubernetesfileImageSorter := sort.NewKubernetesfileImageSorter(kind.Kubernetesfile)
+func DefaultImageFormatter() (generate.IImageFormatter, error) {
+	dockerfileImageFormatter := format.NewDockerfileImageFormatter(kind.Dockerfile)
+	composefileImageFormatter := format.NewComposefileImageFormatter(kind.Composefile)
+	kubernetesfileImageFormatter := format.NewKubernetesfileImageFormatter(kind.Kubernetesfile)
 
-	return generate.NewImageSorter(dockerfileImageSorter, composefileImageSorter, kubernetesfileImageSorter)
+	return generate.NewImageFormatter(dockerfileImageFormatter, composefileImageFormatter, kubernetesfileImageFormatter)
 }
 
 // DefaultImageDigestUpdater creates an ImageDigestUpdater for Generator.

@@ -12,7 +12,7 @@ type Generator struct {
 	PathCollector      IPathCollector
 	ImageParser        IImageParser
 	ImageDigestUpdater IImageDigestUpdater
-	ImageSorter        IImageSorter
+	ImageFormatter     IImageFormatter
 }
 
 // IGenerator provides an interface for Generator's exported
@@ -26,7 +26,7 @@ func NewGenerator(
 	pathCollector IPathCollector,
 	imageParser IImageParser,
 	imageDigestUpdater IImageDigestUpdater,
-	imageSorter IImageSorter,
+	imageFormatter IImageFormatter,
 ) (*Generator, error) {
 	if pathCollector == nil || reflect.ValueOf(pathCollector).IsNil() {
 		return nil, errors.New("pathCollector may not be nil")
@@ -41,16 +41,16 @@ func NewGenerator(
 		return nil, errors.New("imageDigestUpdater may not be nil")
 	}
 
-	if imageSorter == nil ||
-		reflect.ValueOf(imageSorter).IsNil() {
-		return nil, errors.New("imageSorter may not be nil")
+	if imageFormatter == nil ||
+		reflect.ValueOf(imageFormatter).IsNil() {
+		return nil, errors.New("imageFormatter may not be nil")
 	}
 
 	return &Generator{
 		PathCollector:      pathCollector,
 		ImageParser:        imageParser,
 		ImageDigestUpdater: imageDigestUpdater,
-		ImageSorter:        imageSorter,
+		ImageFormatter:     imageFormatter,
 	}, nil
 }
 
@@ -66,13 +66,13 @@ func (g *Generator) GenerateLockfile(writer io.Writer) error {
 	images := g.ImageParser.ParseFiles(paths, done)
 	images = g.ImageDigestUpdater.UpdateDigests(images, done)
 
-	sortedImages, err := g.ImageSorter.SortImages(images, done)
+	formattedImages, err := g.ImageFormatter.FormatImages(images, done)
 	if err != nil {
 		close(done)
 		return err
 	}
 
-	lockfile := NewLockfile(sortedImages)
+	lockfile := NewLockfile(formattedImages)
 
 	return lockfile.Write(writer)
 }

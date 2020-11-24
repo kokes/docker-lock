@@ -1,11 +1,11 @@
-package sort
+package format
 
 import (
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
 	"github.com/safe-waters/docker-lock/pkg/kind"
 )
 
-type IImageSorter interface {
+type IImageFormatter interface {
 	Kind() kind.Kind
-	SortImages(images <-chan parse.IImage) ([]parse.IImage, error)
+	FormatImages(images <-chan parse.IImage) ([]parse.IImage, error)
 }

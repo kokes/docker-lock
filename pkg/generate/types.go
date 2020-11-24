@@ -26,6 +26,6 @@ type ILockfile interface {
 	Write(writer io.Writer) error
 }
 
-type IImageSorter interface {
-	SortImages(images <-chan parse.IImage, done <-chan struct{}) (map[kind.Kind][]parse.IImage, error)
+type IImageFormatter interface {
+	FormatImages(images <-chan parse.IImage, done <-chan struct{}) (map[kind.Kind][]parse.IImage, error)
 }

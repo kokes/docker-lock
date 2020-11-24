@@ -156,7 +156,7 @@ func SetupGenerator(
 		return nil, err
 	}
 
-	sorter, err := DefaultImageSorter()
+	sorter, err := DefaultImageFormatter()
 	if err != nil {
 		return nil, err
 	}

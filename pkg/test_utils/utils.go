@@ -15,6 +15,7 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/safe-waters/docker-lock/pkg/generate/collect"
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
 	"github.com/safe-waters/docker-lock/pkg/kind"
 )
@@ -231,6 +232,17 @@ func SortComposefileImageParserResults(
 			return results[i].Metadata()["dockerfilePath"].(string) < results[j].Metadata()["dockerfilePath"].(string)
 		default:
 			return results[i].Metadata()["servicePosition"].(int) < results[j].Metadata()["servicePosition"].(int)
+		}
+	})
+}
+
+func SortPaths(t *testing.T, paths []collect.IPath) {
+	sort.Slice(paths, func(i, j int) bool {
+		switch {
+		case paths[i].Kind() != paths[j].Kind():
+			return paths[i].Kind() < paths[j].Kind()
+		default:
+			return paths[i].Path() < paths[j].Path()
 		}
 	})
 }

@@ -136,15 +136,6 @@ loop:
 	i.SetDigest(digest)
 }
 
-func (i *image) Export() map[string]interface{} {
-	return map[string]interface{}{
-		"name":     i.Name(),
-		"tag":      i.Tag(),
-		"digest":   i.Digest(),
-		"metadata": i.Metadata(),
-	}
-}
-
 func (i *image) SetErr(err error) {
 	i.err = err
 }

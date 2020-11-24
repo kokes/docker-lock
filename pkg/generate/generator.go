@@ -2,12 +2,9 @@
 package generate
 
 import (
-	"encoding/json"
 	"errors"
 	"io"
 	"reflect"
-
-	"github.com/safe-waters/docker-lock/pkg/kind"
 )
 
 // Generator creates a Lockfile.
@@ -75,20 +72,6 @@ func (g *Generator) GenerateLockfile(writer io.Writer) error {
 		return err
 	}
 
-	lockfile := map[kind.Kind]interface{}{}
-
-	for kind, images := range sortedImages {
-		for _, image := range images {
-			lockfile[kind] = image.Export()
-		}
-	}
-
-	lockfileByt, err := json.MarshalIndent(lockfile, "", "\t")
-	if err != nil {
-		return err
-	}
-
-	_, err = writer.Write(lockfileByt)
-
-	return err
+	lockfile := NewLockfile(sortedImages)
+	return lockfile.Write(writer)
 }

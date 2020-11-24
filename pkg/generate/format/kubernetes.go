@@ -38,6 +38,7 @@ func (k *kubernetesfileImageFormatter) FormatImages(images <-chan parse.IImage) 
 		}
 
 		path := image.Metadata()["path"].(string)
+		containerName := image.Metadata()["containerName"].(string)
 		imagePosition := image.Metadata()["imagePosition"].(int)
 		docPosition := image.Metadata()["docPosition"].(int)
 
@@ -45,6 +46,7 @@ func (k *kubernetesfileImageFormatter) FormatImages(images <-chan parse.IImage) 
 			Name:          image.Name(),
 			Tag:           image.Tag(),
 			Digest:        image.Digest(),
+			ContainerName: containerName,
 			imagePosition: imagePosition,
 			docPosition:   docPosition,
 		}

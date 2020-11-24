@@ -2,6 +2,7 @@
 package generate
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"reflect"
@@ -72,7 +73,12 @@ func (g *Generator) GenerateLockfile(writer io.Writer) error {
 		return err
 	}
 
-	lockfile := NewLockfile(formattedImages)
+	byt, err := json.MarshalIndent(formattedImages, "", "\t")
+	if err != nil {
+		return err
+	}
 
-	return lockfile.Write(writer)
+	_, err = writer.Write(byt)
+
+	return err
 }

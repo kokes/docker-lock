@@ -1,8 +1,6 @@
 package generate
 
 import (
-	"io"
-
 	"github.com/safe-waters/docker-lock/pkg/generate/collect"
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
 	"github.com/safe-waters/docker-lock/pkg/kind"
@@ -22,10 +20,6 @@ type IImageDigestUpdater interface {
 	) <-chan parse.IImage
 }
 
-type ILockfile interface {
-	Write(writer io.Writer) error
-}
-
 type IImageFormatter interface {
-	FormatImages(images <-chan parse.IImage, done <-chan struct{}) (map[kind.Kind][]parse.IImage, error)
+	FormatImages(images <-chan parse.IImage, done <-chan struct{}) (map[kind.Kind]map[string][]interface{}, error)
 }

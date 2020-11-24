@@ -51,6 +51,8 @@ func (d *dockerfileImageFormatter) FormatImages(images <-chan parse.IImage) (map
 	var waitGroup sync.WaitGroup
 
 	for _, images := range formattedImages {
+		images := images
+
 		waitGroup.Add(1)
 
 		go func() {

@@ -17,7 +17,7 @@ type imageFormatter struct {
 
 type formattedResult struct {
 	kind            kind.Kind
-	formattedImages []parse.IImage
+	formattedImages map[string][]interface{}
 	err             error
 }
 
@@ -37,7 +37,7 @@ func NewImageFormatter(formatters ...format.IImageFormatter) (IImageFormatter, e
 	return &imageFormatter{formatters: kindFormatter}, nil
 }
 
-func (i *imageFormatter) FormatImages(images <-chan parse.IImage, done <-chan struct{}) (map[kind.Kind][]parse.IImage, error) {
+func (i *imageFormatter) FormatImages(images <-chan parse.IImage, done <-chan struct{}) (map[kind.Kind]map[string][]interface{}, error) {
 	kindImages := map[kind.Kind]chan parse.IImage{}
 
 	for kind := range i.formatters {
@@ -113,7 +113,7 @@ func (i *imageFormatter) FormatImages(images <-chan parse.IImage, done <-chan st
 		close(formattedResults)
 	}()
 
-	formattedKindImages := map[kind.Kind][]parse.IImage{}
+	formattedKindImages := map[kind.Kind]map[string][]interface{}{}
 
 	for formattedResult := range formattedResults {
 		if formattedResult.err != nil {

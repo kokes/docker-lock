@@ -15,8 +15,6 @@ import (
 	"github.com/safe-waters/docker-lock/cmd/docker"
 	"github.com/safe-waters/docker-lock/cmd/generate"
 	"github.com/safe-waters/docker-lock/cmd/lock"
-	"github.com/safe-waters/docker-lock/cmd/rewrite"
-	"github.com/safe-waters/docker-lock/cmd/verify"
 	"github.com/safe-waters/docker-lock/cmd/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -62,19 +60,9 @@ func execute() error {
 		return err
 	}
 
-	verifyCmd, err := verify.NewVerifyCmd(nil)
-	if err != nil {
-		return err
-	}
-
-	rewriteCmd, err := rewrite.NewRewriteCmd()
-	if err != nil {
-		return err
-	}
-
 	dockerCmd.AddCommand(lockCmd)
 	lockCmd.AddCommand(
-		[]*cobra.Command{versionCmd, generateCmd, verifyCmd, rewriteCmd}...,
+		[]*cobra.Command{versionCmd, generateCmd}...,
 	)
 
 	return dockerCmd.Execute()

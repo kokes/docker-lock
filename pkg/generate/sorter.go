@@ -13,6 +13,12 @@ type imageSorter struct {
 	sorters map[kind.Kind]sort.IImageSorter
 }
 
+type sortedResult struct {
+	kind         kind.Kind
+	sortedImages []parse.IImage
+	err          error
+}
+
 func NewImageSorter(sorters ...sort.IImageSorter) (IImageSorter, error) {
 	if len(sorters) == 0 {
 		return nil, errors.New("sorters must be greater than 0")
@@ -28,10 +34,6 @@ func NewImageSorter(sorters ...sort.IImageSorter) (IImageSorter, error) {
 }
 
 func (i *imageSorter) SortImages(images <-chan parse.IImage, done <-chan struct{}) (map[kind.Kind][]parse.IImage, error) {
-	sortedKindImages := map[kind.Kind][]parse.IImage{}
-
-	errCh := make(chan error)
-
 	kindImages := map[kind.Kind]chan parse.IImage{}
 
 	for _, kind := range kind.AllKinds() {
@@ -63,18 +65,18 @@ func (i *imageSorter) SortImages(images <-chan parse.IImage, done <-chan struct{
 	go func() {
 		kindImagesWaitGroup.Wait()
 
-		for _, paths := range kindImages {
-			close(paths)
+		for _, images := range kindImages {
+			close(images)
 		}
 	}()
 
 	var sortedWaitGroup sync.WaitGroup
 
+	sortedResults := make(chan *sortedResult)
+
 	for kind, images := range kindImages {
 		kind := kind
 		images := images
-
-		sortedKindImages[kind] = []parse.IImage{}
 
 		sortedWaitGroup.Add(1)
 
@@ -85,25 +87,32 @@ func (i *imageSorter) SortImages(images <-chan parse.IImage, done <-chan struct{
 			if err != nil {
 				select {
 				case <-done:
-				case errCh <- err:
+				case sortedResults <- &sortedResult{err: err}:
 				}
 
 				return
 			}
 
-			sortedKindImages[kind] = sortedImages
+			select {
+			case <-done:
+			case sortedResults <- &sortedResult{kind: kind, sortedImages: sortedImages}:
+			}
 		}()
 	}
 
 	go func() {
 		sortedWaitGroup.Wait()
-		close(errCh)
+		close(sortedResults)
 	}()
 
-	for err := range errCh {
-		if err != nil {
-			return nil, err
+	sortedKindImages := map[kind.Kind][]parse.IImage{}
+
+	for sortedResult := range sortedResults {
+		if sortedResult.err != nil {
+			return nil, sortedResult.err
 		}
+
+		sortedKindImages[sortedResult.kind] = sortedResult.sortedImages
 	}
 
 	return sortedKindImages, nil

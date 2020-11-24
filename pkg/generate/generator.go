@@ -71,6 +71,7 @@ func (g *Generator) GenerateLockfile(writer io.Writer) error {
 
 	sortedImages, err := g.ImageSorter.SortImages(images, done)
 	if err != nil {
+		close(done)
 		return err
 	}
 

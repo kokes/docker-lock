@@ -30,7 +30,7 @@ install:
 	@echo "running install target..."
 	@echo "installing docker-lock into docker's cli-plugins folder..."
 	@mkdir -p "$${HOME}/.docker/cli-plugins"
-	@CGO_ENABLED=0 go build -o "$${HOME}/.docker/cli-plugins" ./cmd/docker-lock
+	@CGO_ENABLED=1 go build -race -o "$${HOME}/.docker/cli-plugins" ./cmd/docker-lock
 	@echo "installation passed!"
 	@echo "install target passed!"
 

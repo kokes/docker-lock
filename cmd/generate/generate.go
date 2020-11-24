@@ -156,7 +156,12 @@ func SetupGenerator(
 		return nil, err
 	}
 
-	generator, err := generate.NewGenerator(collector, parser, updater)
+	sorter, err := DefaultImageSorter()
+	if err != nil {
+		return nil, err
+	}
+
+	generator, err := generate.NewGenerator(collector, parser, updater, sorter)
 	if err != nil {
 		return nil, err
 	}

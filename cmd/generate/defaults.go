@@ -12,7 +12,9 @@ import (
 	"github.com/safe-waters/docker-lock/pkg/generate/registry"
 	"github.com/safe-waters/docker-lock/pkg/generate/registry/contrib"
 	"github.com/safe-waters/docker-lock/pkg/generate/registry/firstparty"
+	"github.com/safe-waters/docker-lock/pkg/generate/sort"
 	"github.com/safe-waters/docker-lock/pkg/generate/update"
+	"github.com/safe-waters/docker-lock/pkg/kind"
 )
 
 // DefaultPathCollector creates a PathCollector for Generator.
@@ -21,16 +23,17 @@ func DefaultPathCollector(flags *Flags) (generate.IPathCollector, error) {
 		return nil, err
 	}
 
-	var dockerfileCollector *collect.PathCollector
+	var dockerfileCollector collect.IPathCollector
 
-	var composefileCollector *collect.PathCollector
+	var composefileCollector collect.IPathCollector
 
-	var kubernetesfileCollector *collect.PathCollector
+	var kubernetesfileCollector collect.IPathCollector
 
 	var err error
 
 	if !flags.DockerfileFlags.ExcludePaths {
 		dockerfileCollector, err = collect.NewPathCollector(
+			kind.Dockerfile,
 			flags.FlagsWithSharedValues.BaseDir, []string{"Dockerfile"},
 			flags.DockerfileFlags.ManualPaths, flags.DockerfileFlags.Globs,
 			flags.DockerfileFlags.Recursive,
@@ -42,6 +45,7 @@ func DefaultPathCollector(flags *Flags) (generate.IPathCollector, error) {
 
 	if !flags.ComposefileFlags.ExcludePaths {
 		composefileCollector, err = collect.NewPathCollector(
+			kind.Composefile,
 			flags.FlagsWithSharedValues.BaseDir,
 			[]string{"docker-compose.yml", "docker-compose.yaml"},
 			flags.ComposefileFlags.ManualPaths, flags.ComposefileFlags.Globs,
@@ -54,6 +58,7 @@ func DefaultPathCollector(flags *Flags) (generate.IPathCollector, error) {
 
 	if !flags.KubernetesfileFlags.ExcludePaths {
 		kubernetesfileCollector, err = collect.NewPathCollector(
+			kind.Kubernetesfile,
 			flags.FlagsWithSharedValues.BaseDir,
 			[]string{
 				"deployment.yml", "deployment.yaml",
@@ -69,11 +74,7 @@ func DefaultPathCollector(flags *Flags) (generate.IPathCollector, error) {
 		}
 	}
 
-	return &generate.PathCollector{
-		DockerfileCollector:     dockerfileCollector,
-		ComposefileCollector:    composefileCollector,
-		KubernetesfileCollector: kubernetesfileCollector,
-	}, nil
+	return generate.NewPathCollector(dockerfileCollector, composefileCollector, kubernetesfileCollector)
 }
 
 // DefaultImageParser creates an ImageParser for Generator.
@@ -82,21 +83,22 @@ func DefaultImageParser(flags *Flags) (generate.IImageParser, error) {
 		return nil, err
 	}
 
-	var dockerfileImageParser *parse.DockerfileImageParser
+	var dockerfileImageParser parse.IDockerfileImageParser
 
-	var composefileImageParser *parse.ComposefileImageParser
+	var composefileImageParser parse.IComposefileImageParser
 
-	var kubernetesfileImageParser *parse.KubernetesfileImageParser
+	var kubernetesfileImageParser parse.IKubernetesfileImageParser
 
 	if !flags.DockerfileFlags.ExcludePaths ||
 		!flags.ComposefileFlags.ExcludePaths {
-		dockerfileImageParser = &parse.DockerfileImageParser{}
+		dockerfileImageParser = parse.NewDockerfileImageParser(kind.Dockerfile)
 	}
 
 	if !flags.ComposefileFlags.ExcludePaths {
 		var err error
 
 		composefileImageParser, err = parse.NewComposefileImageParser(
+			kind.Composefile,
 			dockerfileImageParser,
 		)
 
@@ -106,14 +108,18 @@ func DefaultImageParser(flags *Flags) (generate.IImageParser, error) {
 	}
 
 	if !flags.KubernetesfileFlags.ExcludePaths {
-		kubernetesfileImageParser = &parse.KubernetesfileImageParser{}
+		kubernetesfileImageParser = parse.NewKubernetesfileImageParser(kind.Kubernetesfile)
 	}
 
-	return &generate.ImageParser{
-		DockerfileImageParser:     dockerfileImageParser,
-		ComposefileImageParser:    composefileImageParser,
-		KubernetesfileImageParser: kubernetesfileImageParser,
-	}, nil
+	return generate.NewImageParser(dockerfileImageParser, composefileImageParser, kubernetesfileImageParser)
+}
+
+func DefaultImageSorter() (generate.IImageSorter, error) {
+	dockerfileImageSorter := sort.NewDockerfileImageSorter(kind.Dockerfile)
+	composefileImageSorter := sort.NewComposefileImageSorter(kind.Composefile)
+	kubernetesfileImageSorter := sort.NewKubernetesfileImageSorter(kind.Kubernetesfile)
+
+	return generate.NewImageSorter(dockerfileImageSorter, composefileImageSorter, kubernetesfileImageSorter)
 }
 
 // DefaultImageDigestUpdater creates an ImageDigestUpdater for Generator.

@@ -5,6 +5,7 @@ import (
 
 	"github.com/safe-waters/docker-lock/pkg/generate/collect"
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
+	"github.com/safe-waters/docker-lock/pkg/kind"
 )
 
 type IPathCollector interface {
@@ -25,4 +26,6 @@ type ILockfile interface {
 	Write(writer io.Writer) error
 }
 
-type IImageSorter func(i int, j int) bool
+type IImageSorter interface {
+	SortImages(images <-chan parse.IImage, done <-chan struct{}) (map[kind.Kind][]parse.IImage, error)
+}

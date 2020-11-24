@@ -2,6 +2,7 @@
 package generate
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"reflect"
@@ -14,7 +15,7 @@ type Generator struct {
 	PathCollector      IPathCollector
 	ImageParser        IImageParser
 	ImageDigestUpdater IImageDigestUpdater
-	ImageSorters       map[kind.Kind]IImageSorter
+	ImageSorter        IImageSorter
 }
 
 // IGenerator provides an interface for Generator's exported
@@ -28,7 +29,7 @@ func NewGenerator(
 	pathCollector IPathCollector,
 	imageParser IImageParser,
 	imageDigestUpdater IImageDigestUpdater,
-	imageSorters map[kind.Kind]IImageSorter,
+	imageSorter IImageSorter,
 ) (*Generator, error) {
 	if pathCollector == nil || reflect.ValueOf(pathCollector).IsNil() {
 		return nil, errors.New("pathCollector may not be nil")
@@ -43,15 +44,16 @@ func NewGenerator(
 		return nil, errors.New("imageDigestUpdater may not be nil")
 	}
 
-	if len(imageSorters) == 0 {
-		return nil, errors.New("imageSorters may not be nil")
+	if imageSorter == nil ||
+		reflect.ValueOf(imageSorter).IsNil() {
+		return nil, errors.New("imageSorter may not be nil")
 	}
 
 	return &Generator{
 		PathCollector:      pathCollector,
 		ImageParser:        imageParser,
 		ImageDigestUpdater: imageDigestUpdater,
-		ImageSorters:       imageSorters,
+		ImageSorter:        imageSorter,
 	}, nil
 }
 
@@ -65,13 +67,27 @@ func (g *Generator) GenerateLockfile(writer io.Writer) error {
 
 	paths := g.PathCollector.CollectPaths(done)
 	images := g.ImageParser.ParseFiles(paths, done)
-	imagesWithDigests := g.ImageDigestUpdater.UpdateDigests(images, done)
+	images = g.ImageDigestUpdater.UpdateDigests(images, done)
 
-	lockfile, err := NewLockfile(imagesWithDigests, g.ImageSorters)
+	sortedImages, err := g.ImageSorter.SortImages(images, done)
 	if err != nil {
-		close(done)
 		return err
 	}
 
-	return lockfile.Write(writer)
+	lockfile := map[kind.Kind]interface{}{}
+
+	for kind, images := range sortedImages {
+		for _, image := range images {
+			lockfile[kind] = image.Export()
+		}
+	}
+
+	lockfileByt, err := json.MarshalIndent(lockfile, "", "\t")
+	if err != nil {
+		return err
+	}
+
+	_, err = writer.Write(lockfileByt)
+
+	return err
 }

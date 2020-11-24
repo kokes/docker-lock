@@ -20,6 +20,7 @@ type IImage interface {
 	Metadata() map[string]interface{}
 	ImageLine() string
 	SetNameTagDigestFromImageLine(imageLine string)
+	Export() map[string]interface{}
 	SetErr(err error)
 	Err() error
 }

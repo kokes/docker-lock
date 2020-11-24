@@ -74,14 +74,14 @@ spec:
 					"path":     "Dockerfile",
 				}),
 				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"position":    0,
-					"path":        "docker-compose.yml",
-					"serviceName": "svc",
+					"servicePosition": 0,
+					"path":            "docker-compose.yml",
+					"serviceName":     "svc",
 				}),
 				test_utils.MakeImage(kind.Composefile, "golang", "latest", "", map[string]interface{}{
-					"position":    0,
-					"path":        "docker-compose.yml",
-					"serviceName": "anothersvc",
+					"servicePosition": 0,
+					"path":            "docker-compose.yml",
+					"serviceName":     "anothersvc",
 				}),
 				test_utils.MakeImage(kind.Kubernetesfile, "redis", "latest", "", map[string]interface{}{
 					"path":          "pod.yml",

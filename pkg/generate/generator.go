@@ -73,5 +73,6 @@ func (g *Generator) GenerateLockfile(writer io.Writer) error {
 	}
 
 	lockfile := NewLockfile(sortedImages)
+
 	return lockfile.Write(writer)
 }

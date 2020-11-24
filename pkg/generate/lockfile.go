@@ -15,6 +15,7 @@ type lockfile struct {
 func NewLockfile(sortedImages map[kind.Kind][]parse.IImage) ILockfile {
 	exportedImages := map[kind.Kind][]interface{}{}
 
+	// TODO: go routine
 	for kind, images := range sortedImages {
 		for _, image := range images {
 			exportedImages[kind] = append(

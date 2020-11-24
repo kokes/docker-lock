@@ -7,7 +7,3 @@ const (
 	Composefile    = "Composefile"
 	Kubernetesfile = "Kubernetesfile"
 )
-
-func AllKinds() []Kind {
-	return []Kind{Dockerfile, Composefile, Kubernetesfile}
-}

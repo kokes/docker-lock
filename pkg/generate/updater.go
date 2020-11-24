@@ -49,6 +49,15 @@ func (i *imageDigestUpdater) UpdateDigests(
 			defer imagesWithoutDigestsWaitGroup.Done()
 
 			for image := range images {
+				if image.Err() != nil {
+					select {
+					case <-done:
+					case updatedImages <- image:
+					}
+
+					return
+				}
+
 				if image.Digest() == "" {
 					key := image.Name() + image.Tag()
 					if _, ok := digestsToUpdate[key]; !ok { // nolint: lll
@@ -80,8 +89,16 @@ func (i *imageDigestUpdater) UpdateDigests(
 		for updatedImage := range i.updater.UpdateDigests(
 			imagesWithoutDigests, done,
 		) {
-			// TODO: distinguish these errors.
 			if updatedImage.Err() != nil && !i.ignoreMissingDigests {
+				select {
+				case <-done:
+				case updatedImages <- updatedImage:
+				}
+
+				continue
+			}
+
+			if updatedImage.Err() != nil {
 				select {
 				case <-done:
 				case updatedImages <- updatedImage:

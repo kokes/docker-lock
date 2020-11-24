@@ -2,6 +2,8 @@ package generate
 
 import (
 	"errors"
+	"fmt"
+	"reflect"
 	"sync"
 
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
@@ -20,14 +22,16 @@ type sortedResult struct {
 }
 
 func NewImageSorter(sorters ...sort.IImageSorter) (IImageSorter, error) {
-	if len(sorters) == 0 {
-		return nil, errors.New("sorters must be greater than 0")
-	}
-
 	kindSorter := map[kind.Kind]sort.IImageSorter{}
 
 	for _, sorter := range sorters {
-		kindSorter[sorter.Kind()] = sorter
+		if sorter != nil && !reflect.ValueOf(sorter).IsNil() {
+			kindSorter[sorter.Kind()] = sorter
+		}
+	}
+
+	if len(kindSorter) == 0 {
+		return nil, errors.New("non nil sorters must be greater than 0")
 	}
 
 	return &imageSorter{sorters: kindSorter}, nil
@@ -36,7 +40,7 @@ func NewImageSorter(sorters ...sort.IImageSorter) (IImageSorter, error) {
 func (i *imageSorter) SortImages(images <-chan parse.IImage, done <-chan struct{}) (map[kind.Kind][]parse.IImage, error) {
 	kindImages := map[kind.Kind]chan parse.IImage{}
 
-	for _, kind := range kind.AllKinds() {
+	for kind := range i.sorters {
 		kindImages[kind] = make(chan parse.IImage)
 	}
 
@@ -45,6 +49,10 @@ func (i *imageSorter) SortImages(images <-chan parse.IImage, done <-chan struct{
 	for image := range images {
 		if image.Err() != nil {
 			return nil, image.Err()
+		}
+
+		if _, ok := i.sorters[image.Kind()]; !ok {
+			return nil, fmt.Errorf("kind %s does not have a sorter defined", image.Kind())
 		}
 
 		image := image

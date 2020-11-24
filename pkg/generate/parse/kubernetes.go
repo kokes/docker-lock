@@ -32,10 +32,6 @@ func (k *kubernetesfileImageParser) ParseFiles(
 	paths <-chan collect.IPath,
 	done <-chan struct{},
 ) <-chan IImage {
-	if paths == nil {
-		return nil
-	}
-
 	kubernetesfileImages := make(chan IImage)
 
 	var waitGroup sync.WaitGroup

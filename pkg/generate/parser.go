@@ -2,6 +2,8 @@ package generate
 
 import (
 	"errors"
+	"fmt"
+	"reflect"
 	"sync"
 
 	"github.com/safe-waters/docker-lock/pkg/generate/collect"
@@ -14,13 +16,16 @@ type imageParser struct {
 }
 
 func NewImageParser(parsers ...parse.IImageParser) (IImageParser, error) {
-	if len(parsers) == 0 {
-		return nil, errors.New("parsers must be greater than 0")
+	kindParser := map[kind.Kind]parse.IImageParser{}
+
+	for _, parser := range parsers {
+		if parser != nil && !reflect.ValueOf(parser).IsNil() {
+			kindParser[parser.Kind()] = parser
+		}
 	}
 
-	kindParser := map[kind.Kind]parse.IImageParser{}
-	for _, parser := range parsers {
-		kindParser[parser.Kind()] = parser
+	if len(kindParser) == 0 {
+		return nil, errors.New("non nil parsers must be greater than 0")
 	}
 
 	return &imageParser{parsers: kindParser}, nil
@@ -42,7 +47,7 @@ func (i *imageParser) ParseFiles(
 
 		kindPaths := map[kind.Kind]chan collect.IPath{}
 
-		for _, kind := range kind.AllKinds() {
+		for kind := range i.parsers {
 			kindPaths[kind] = make(chan collect.IPath)
 		}
 
@@ -55,6 +60,29 @@ func (i *imageParser) ParseFiles(
 
 			go func() {
 				defer kindPathsWaitGroup.Done()
+
+				if path.Err() != nil {
+					select {
+					case <-done:
+					case images <- parse.NewImage(
+						path.Kind(), "", "", "", nil, path.Err(),
+					):
+					}
+
+					return
+				}
+
+				if _, ok := kindPaths[path.Kind()]; !ok {
+					select {
+					case <-done:
+					case images <- parse.NewImage(
+						path.Kind(), "", "", "", nil,
+						fmt.Errorf("kind %s does not have a parser defined", path.Kind()),
+					):
+					}
+
+					return
+				}
 
 				select {
 				case <-done:

@@ -2,6 +2,7 @@ package generate
 
 import (
 	"errors"
+	"reflect"
 	"sync"
 
 	"github.com/safe-waters/docker-lock/pkg/generate/collect"
@@ -12,11 +13,19 @@ type pathCollector struct {
 }
 
 func NewPathCollector(collectors ...collect.IPathCollector) (IPathCollector, error) {
-	if len(collectors) == 0 {
-		return nil, errors.New("collectors must be greater than 0")
+	var nonNilCollectors []collect.IPathCollector
+
+	for _, collector := range collectors {
+		if collector != nil && !reflect.ValueOf(collector).IsNil() {
+			nonNilCollectors = append(nonNilCollectors, collector)
+		}
 	}
 
-	return &pathCollector{collectors: collectors}, nil
+	if len(nonNilCollectors) == 0 {
+		return nil, errors.New("non nil collectors must be greater than 0")
+	}
+
+	return &pathCollector{collectors: nonNilCollectors}, nil
 }
 
 // CollectPaths collects paths to be parsed.

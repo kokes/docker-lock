@@ -24,6 +24,7 @@ func (p *path) SetKind(kind kind.Kind) {
 	p.kind = kind
 }
 
+// TODO: Val
 func (p *path) Path() string {
 	return p.val
 }

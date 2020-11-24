@@ -44,10 +44,6 @@ func (c *composefileImageParser) ParseFiles(
 	paths <-chan collect.IPath,
 	done <-chan struct{},
 ) <-chan IImage {
-	if paths == nil {
-		return nil
-	}
-
 	composefileImages := make(chan IImage)
 
 	var waitGroup sync.WaitGroup

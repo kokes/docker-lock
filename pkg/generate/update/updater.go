@@ -32,10 +32,6 @@ func (i *imageDigestUpdater) UpdateDigests(
 	images <-chan parse.IImage,
 	done <-chan struct{},
 ) <-chan parse.IImage {
-	if images == nil {
-		return nil
-	}
-
 	updatedImages := make(chan parse.IImage)
 
 	var waitGroup sync.WaitGroup

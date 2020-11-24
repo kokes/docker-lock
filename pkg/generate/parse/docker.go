@@ -31,10 +31,6 @@ func (d *dockerfileImageParser) ParseFiles(
 	paths <-chan collect.IPath,
 	done <-chan struct{},
 ) <-chan IImage {
-	if paths == nil {
-		return nil
-	}
-
 	dockerfileImages := make(chan IImage)
 
 	var waitGroup sync.WaitGroup

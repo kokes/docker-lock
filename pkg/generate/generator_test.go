@@ -1,234 +1,281 @@
 package generate_test
 
-// import (
-// 	"bytes"
-// 	"encoding/json"
-// 	"testing"
+import (
+	"bytes"
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"testing"
 
-// 	cmd_generate "github.com/safe-waters/docker-lock/cmd/generate"
-// 	"github.com/safe-waters/docker-lock/pkg/generate"
-// 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
-// 	"github.com/safe-waters/docker-lock/pkg/generate/registry"
-// )
+	cmd_generate "github.com/safe-waters/docker-lock/cmd/generate"
+	"github.com/safe-waters/docker-lock/pkg/generate"
+	"github.com/safe-waters/docker-lock/pkg/generate/collect"
+	"github.com/safe-waters/docker-lock/pkg/generate/format"
+	"github.com/safe-waters/docker-lock/pkg/generate/parse"
+	"github.com/safe-waters/docker-lock/pkg/generate/registry"
+	"github.com/safe-waters/docker-lock/pkg/generate/update"
+	"github.com/safe-waters/docker-lock/pkg/kind"
+	"github.com/safe-waters/docker-lock/pkg/test_utils"
+)
 
-// func TestGenerator(t *testing.T) {
-// 	t.Parallel()
+func TestGenerator(t *testing.T) {
+	t.Parallel()
 
-// 	tests := []struct {
-// 		Name       string
-// 		Flags      *cmd_generate.Flags
-// 		Expected   *generate.Lockfile
-// 		ShouldFail bool
-// 	}{
-// 		{
-// 			Name: "Normal Dockerfiles, Composefiles, And Kubernetesfiles",
-// 			Flags: makeFlags(
-// 				t, "testdata/success", "docker-lock.json", "", ".env", false,
-// 				[]string{"nocompose/Dockerfile"}, nil, nil, nil, nil, nil,
-// 				false, false, false, false, false, false,
-// 			),
-// 			Expected: &generate.Lockfile{
-// 				DockerfileImages: map[string][]*parse.DockerfileImage{
-// 					"testdata/success/nocompose/Dockerfile": {
-// 						{
-// 							Image: &parse.Image{
-// 								Name:   "redis",
-// 								Tag:    "latest",
-// 								Digest: redisLatestSHA,
-// 							},
-// 						},
-// 						{
-// 							Image: &parse.Image{
-// 								Name:   "golang",
-// 								Tag:    "latest",
-// 								Digest: golangLatestSHA,
-// 							},
-// 						},
-// 					},
-// 				},
-// 				ComposefileImages: map[string][]*parse.ComposefileImage{
-// 					"testdata/success/docker-compose.yml": {
-// 						{
-// 							Image: &parse.Image{
-// 								Name:   "redis",
-// 								Tag:    "latest",
-// 								Digest: redisLatestSHA,
-// 							},
-// 							DockerfilePath: "testdata/success/database/Dockerfile", // nolint: lll
-// 							ServiceName:    "database",
-// 						},
-// 						{
-// 							Image: &parse.Image{
-// 								Name:   "golang",
-// 								Tag:    "latest",
-// 								Digest: golangLatestSHA,
-// 							},
-// 							ServiceName: "web",
-// 						},
-// 					},
-// 				},
-// 				KubernetesfileImages: map[string][]*parse.KubernetesfileImage{
-// 					"testdata/success/pod.yml": {
-// 						{
-// 							Image: &parse.Image{
-// 								Name:   "busybox",
-// 								Tag:    "latest",
-// 								Digest: busyboxLatestSHA,
-// 							},
-// 							ContainerName: "busybox",
-// 						},
-// 					},
-// 				},
-// 			},
-// 		},
-// 		{
-// 			Name: "Exclude All Except Composefiles",
-// 			Flags: makeFlags(
-// 				t, "testdata/success", "docker-lock.json", "", ".env", false,
-// 				[]string{"nocompose/Dockerfile"}, nil, nil, nil, nil, nil,
-// 				false, false, false, true, false, true,
-// 			),
-// 			Expected: &generate.Lockfile{
-// 				ComposefileImages: map[string][]*parse.ComposefileImage{
-// 					"testdata/success/docker-compose.yml": {
-// 						{
-// 							Image: &parse.Image{
-// 								Name:   "redis",
-// 								Tag:    "latest",
-// 								Digest: redisLatestSHA,
-// 							},
-// 							DockerfilePath: "testdata/success/database/Dockerfile", // nolint: lll
-// 							ServiceName:    "database",
-// 						},
-// 						{
-// 							Image: &parse.Image{
-// 								Name:   "golang",
-// 								Tag:    "latest",
-// 								Digest: golangLatestSHA,
-// 							},
-// 							ServiceName: "web",
-// 						},
-// 					},
-// 				},
-// 			},
-// 		},
-// 		{
-// 			Name: "Exclude All Except Kubernetesfiles",
-// 			Flags: makeFlags(
-// 				t, "testdata/success", "docker-lock.json", "", ".env", false,
-// 				[]string{"nocompose/Dockerfile"}, nil, nil, nil, nil, nil,
-// 				false, false, false, true, true, false,
-// 			),
-// 			Expected: &generate.Lockfile{
-// 				KubernetesfileImages: map[string][]*parse.KubernetesfileImage{
-// 					"testdata/success/pod.yml": {
-// 						{
-// 							Image: &parse.Image{
-// 								Name:   "busybox",
-// 								Tag:    "latest",
-// 								Digest: busyboxLatestSHA,
-// 							},
-// 							ContainerName: "busybox",
-// 						},
-// 					},
-// 				},
-// 			},
-// 		},
-// 		{
-// 			Name: "Exclude All Except Dockerfiles",
-// 			Flags: makeFlags(
-// 				t, "testdata/success", "docker-lock.json", "", ".env", false,
-// 				[]string{"nocompose/Dockerfile"},
-// 				[]string{"docker-compose.yml"}, nil, nil, nil, nil,
-// 				false, false, false, false, true, true,
-// 			),
-// 			Expected: &generate.Lockfile{
-// 				DockerfileImages: map[string][]*parse.DockerfileImage{
-// 					"testdata/success/nocompose/Dockerfile": {
-// 						{
-// 							Image: &parse.Image{
-// 								Name:   "redis",
-// 								Tag:    "latest",
-// 								Digest: redisLatestSHA,
-// 							},
-// 						},
-// 						{
-// 							Image: &parse.Image{
-// 								Name:   "golang",
-// 								Tag:    "latest",
-// 								Digest: golangLatestSHA,
-// 							},
-// 						},
-// 					},
-// 				},
-// 				ComposefileImages: nil,
-// 			},
-// 		},
-// 		{
-// 			Name: "Exclude All",
-// 			Flags: makeFlags(
-// 				t, "testdata/success", "docker-lock.json", "", ".env", false,
-// 				[]string{"nocompose/Dockerfile"},
-// 				[]string{"docker-compose.yml"}, nil, nil, nil, nil,
-// 				false, false, false, true, true, true,
-// 			),
-// 			Expected: &generate.Lockfile{},
-// 		},
-// 		{
-// 			Name: "Service Typo",
-// 			Flags: makeFlags(
-// 				t, "testdata/fail", "docker-lock.json", "", ".env", false,
-// 				nil, nil, nil, nil, nil, nil,
-// 				false, false, false, false, false, false,
-// 			),
-// 			ShouldFail: true,
-// 		},
-// 	}
+	tests := []struct {
+		Name          string
+		PathsToCreate []string
+		Contents      [][]byte
+		Flags         *cmd_generate.Flags
+		Expected      map[string]map[string][]interface{}
+		ShouldFail    bool
+	}{
+		{
+			Name:          "One Kind",
+			PathsToCreate: []string{"Dockerfile"},
+			Contents: [][]byte{
+				[]byte(`
+FROM golang
+FROM busybox
+`,
+				),
+			},
+			Expected: map[string]map[string][]interface{}{
+				kind.Dockerfile: {
+					"Dockerfile": {
+						map[string]string{
+							"name":   "golang",
+							"tag":    "latest",
+							"digest": test_utils.GolangLatestSHA,
+						},
+						map[string]string{
+							"name":   "busybox",
+							"tag":    "latest",
+							"digest": test_utils.BusyboxLatestSHA,
+						},
+					},
+				},
+			},
+		},
+		{
+			Name:          "All Kinds",
+			PathsToCreate: []string{"Dockerfile", "docker-compose.yml", "pod.yml"},
+			Contents: [][]byte{
+				[]byte(`
+FROM golang
+FROM busybox
+`,
+				),
+				[]byte(`
+version: '3'
+services:
+  web:
+    image: golang
+  database:
+    image: unused
+    build: .
+`),
+				[]byte(`apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+  labels:
+    app: test
+spec:
+  containers:
+  - name: busybox
+    image: busybox:v1@sha256:busybox
+    ports:
+    - containerPort: 80
+  - name: golang
+    image: golang@sha256:golang
+    ports:
+    - containerPort: 88
+`),
+			},
+			Expected: map[string]map[string][]interface{}{
+				kind.Dockerfile: {
+					"Dockerfile": {
+						map[string]string{
+							"name":   "golang",
+							"tag":    "latest",
+							"digest": test_utils.GolangLatestSHA,
+						},
+						map[string]string{
+							"name":   "busybox",
+							"tag":    "latest",
+							"digest": test_utils.BusyboxLatestSHA,
+						},
+					},
+				},
+				kind.Composefile: {
+					"docker-compose.yml": {
+						map[string]string{
+							"name":       "golang",
+							"tag":        "latest",
+							"digest":     test_utils.GolangLatestSHA,
+							"service":    "database",
+							"dockerfile": "Dockerfile",
+						},
+						map[string]string{
+							"name":       "busybox",
+							"tag":        "latest",
+							"digest":     test_utils.BusyboxLatestSHA,
+							"service":    "database",
+							"dockerfile": "Dockerfile",
+						},
+						map[string]string{
+							"name":    "golang",
+							"tag":     "latest",
+							"digest":  test_utils.GolangLatestSHA,
+							"service": "web",
+						},
+					},
+				},
+				kind.Kubernetesfile: {
+					"pod.yml": {
+						map[string]string{
+							"name":      "busybox",
+							"tag":       "v1",
+							"digest":    "busybox",
+							"container": "busybox",
+						},
+						map[string]string{
+							"name":      "golang",
+							"tag":       "",
+							"digest":    "golang",
+							"container": "golang",
+						},
+					},
+				},
+			},
+		},
+	}
 
-// 	for _, test := range tests {
-// 		test := test
+	for _, test := range tests {
+		test := test
 
-// 		t.Run(test.Name, func(t *testing.T) {
-// 			t.Parallel()
+		t.Run(test.Name, func(t *testing.T) {
+			t.Parallel()
 
-// 			var numNetworkCalls uint64
+			tempDir := test_utils.MakeTempDirInCurrentDir(t)
+			defer os.RemoveAll(tempDir)
 
-// 			server := mockServer(t, &numNetworkCalls)
-// 			defer server.Close()
+			test_utils.WriteFilesToTempDir(
+				t, tempDir, test.PathsToCreate, test.Contents,
+			)
 
-// 			client := &registry.HTTPClient{
-// 				Client:      server.Client(),
-// 				RegistryURL: server.URL,
-// 				TokenURL:    server.URL + "?scope=repository%s",
-// 			}
+			dockerfileCollector, err := collect.NewPathCollector(kind.Dockerfile, tempDir, []string{"Dockerfile"}, nil, nil, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			composefileCollector, err := collect.NewPathCollector(kind.Composefile, tempDir, []string{"docker-compose.yml"}, nil, nil, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			kubernetesfileCollector, err := collect.NewPathCollector(kind.Kubernetesfile, tempDir, []string{"pod.yml"}, nil, nil, false)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-// 			generator, err := cmd_generate.SetupGenerator(client, test.Flags)
-// 			if err != nil {
-// 				t.Fatal(err)
-// 			}
+			collector, err := generate.NewPathCollector(dockerfileCollector, composefileCollector, kubernetesfileCollector)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-// 			var buf bytes.Buffer
+			dockerfileImageParser := parse.NewDockerfileImageParser()
+			composefileImageParser, err := parse.NewComposefileImageParser(dockerfileImageParser)
+			if err != nil {
+				t.Fatal(err)
+			}
+			kubernetesfileImageParser := parse.NewKubernetesfileImageParser()
 
-// 			err = generator.GenerateLockfile(&buf)
+			parser, err := generate.NewImageParser(dockerfileImageParser, composefileImageParser, kubernetesfileImageParser)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-// 			if test.ShouldFail {
-// 				if err == nil {
-// 					t.Fatal("expected error but did not get one")
-// 				}
+			var gotNumNetworkCalls uint64
 
-// 				return
-// 			}
+			server := test_utils.MockServer(t, &gotNumNetworkCalls)
+			defer server.Close()
 
-// 			if err != nil {
-// 				t.Fatal(err)
-// 			}
+			client := &registry.HTTPClient{
+				Client:      server.Client(),
+				RegistryURL: server.URL,
+				TokenURL:    server.URL + "?scope=repository%s",
+			}
 
-// 			var got generate.Lockfile
-// 			if err = json.Unmarshal(buf.Bytes(), &got); err != nil {
-// 				t.Fatal(err)
-// 			}
+			wrapperManager, err := DefaultWrapperManager(
+				client, DefaultConfigPath(),
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-// 			assertLockfilesEqual(t, test.Expected, &got)
-// 		})
-// 	}
-// }
+			innerUpdater, err := update.NewImageDigestUpdater(wrapperManager)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			updater, err := generate.NewImageDigestUpdater(innerUpdater, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			dockerfileImageFormatter := format.NewDockerfileImageFormatter(kind.Dockerfile)
+			composefileImageFormatter := format.NewComposefileImageFormatter(kind.Composefile)
+			kubernetesfileImageFormatter := format.NewKubernetesfileImageFormatter(kind.Kubernetesfile)
+
+			formatter, err := generate.NewImageFormatter(dockerfileImageFormatter, composefileImageFormatter, kubernetesfileImageFormatter)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			generator, err := generate.NewGenerator(collector, parser, updater, formatter)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			var gotByt bytes.Buffer
+
+			err = generator.GenerateLockfile(&gotByt)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			sortedGot := map[string]map[string][]interface{}{}
+
+			if err = json.Unmarshal(gotByt.Bytes(), &sortedGot); err != nil {
+				t.Fatal(err)
+			}
+
+			expectedWithTempDir := map[string]map[string][]interface{}{}
+			for k, pathImages := range test.Expected {
+				expectedWithTempDir[k] = map[string][]interface{}{}
+				for path, images := range pathImages {
+					for _, image := range images {
+						image := image.(map[string]string)
+						if dockerfile, ok := image["dockerfile"]; ok {
+							image["dockerfile"] = filepath.Join(tempDir, dockerfile)
+						}
+					}
+					expectedWithTempDir[k][filepath.Join(tempDir, path)] = pathImages[path]
+				}
+			}
+
+			expected, err := json.MarshalIndent(expectedWithTempDir, "", "\t")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			got, err := json.MarshalIndent(sortedGot, "", "\t")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if !bytes.Equal(expected, got) {
+				t.Fatalf("expected:\n%s\ngot:\n%s", string(expected), string(got))
+			}
+		})
+	}
+}

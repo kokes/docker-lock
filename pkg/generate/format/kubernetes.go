@@ -1,6 +1,8 @@
 package format
 
 import (
+	"errors"
+	"path/filepath"
 	"sort"
 	"sync"
 
@@ -37,10 +39,27 @@ func (k *kubernetesfileImageFormatter) FormatImages(images <-chan parse.IImage) 
 			return nil, image.Err()
 		}
 
-		path := image.Metadata()["path"].(string)
-		containerName := image.Metadata()["containerName"].(string)
-		imagePosition := image.Metadata()["imagePosition"].(int)
-		docPosition := image.Metadata()["docPosition"].(int)
+		path, ok := image.Metadata()["path"].(string)
+		if !ok {
+			return nil, errors.New("missing path in kubernetesfile image")
+		}
+
+		path = filepath.ToSlash(path)
+
+		containerName, ok := image.Metadata()["containerName"].(string)
+		if !ok {
+			return nil, errors.New("missing containerName in kubernetesfile image")
+		}
+
+		imagePosition, ok := image.Metadata()["imagePosition"].(int)
+		if !ok {
+			return nil, errors.New("missing imagePosition in kubernetesfile image")
+		}
+
+		docPosition, ok := image.Metadata()["docPosition"].(int)
+		if !ok {
+			return nil, errors.New("missing docPosition in kubernetesfile image")
+		}
 
 		formattedImage := &formattedKubernetesfileImage{
 			Name:          image.Name(),

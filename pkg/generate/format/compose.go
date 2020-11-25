@@ -1,6 +1,8 @@
 package format
 
 import (
+	"errors"
+	"path/filepath"
 	"sort"
 	"sync"
 
@@ -39,10 +41,23 @@ func (c *composefileImageFormatter) FormatImages(images <-chan parse.IImage) (ma
 			return nil, image.Err()
 		}
 
-		path := image.Metadata()["path"].(string)
+		path, ok := image.Metadata()["path"].(string)
+		if !ok {
+			return nil, errors.New("missing path in composefile image")
+		}
+
 		dockerfilePath, _ := image.Metadata()["dockerfilePath"].(string)
-		serviceName := image.Metadata()["serviceName"].(string)
-		servicePosition := image.Metadata()["servicePosition"].(int)
+		dockerfilePath = filepath.ToSlash(dockerfilePath)
+
+		serviceName, ok := image.Metadata()["serviceName"].(string)
+		if !ok {
+			return nil, errors.New("missing serviceName in composefile image")
+		}
+
+		servicePosition, ok := image.Metadata()["servicePosition"].(int)
+		if !ok {
+			return nil, errors.New("missing servicePosition in composefile image")
+		}
 
 		formattedImage := &formattedComposefileImage{
 			Name:            image.Name(),

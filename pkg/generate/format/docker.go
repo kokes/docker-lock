@@ -1,6 +1,8 @@
 package format
 
 import (
+	"errors"
+	"path/filepath"
 	"sort"
 	"sync"
 
@@ -35,8 +37,17 @@ func (d *dockerfileImageFormatter) FormatImages(images <-chan parse.IImage) (map
 			return nil, image.Err()
 		}
 
-		path := image.Metadata()["path"].(string)
-		position := image.Metadata()["position"].(int)
+		path, ok := image.Metadata()["path"].(string)
+		if !ok {
+			return nil, errors.New("missing path in dockerfile image")
+		}
+
+		path = filepath.ToSlash(path)
+
+		position, ok := image.Metadata()["position"].(int)
+		if !ok {
+			return nil, errors.New("missing position in dockerfile image")
+		}
 
 		formattedImage := &formattedDockerfileImage{
 			Name:     image.Name(),

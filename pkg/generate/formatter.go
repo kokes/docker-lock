@@ -101,9 +101,11 @@ func (i *imageFormatter) FormatImages(images <-chan parse.IImage, done <-chan st
 				return
 			}
 
-			select {
-			case <-done:
-			case formattedResults <- &formattedResult{kind: kind, formattedImages: formattedImages}:
+			if len(formattedImages) > 0 {
+				select {
+				case <-done:
+				case formattedResults <- &formattedResult{kind: kind, formattedImages: formattedImages}:
+				}
 			}
 		}()
 	}

@@ -27,76 +27,76 @@ func TestImageDigestUpdater(t *testing.T) {
 		{
 			Name: "Dockerfiles, Composefiles, And Kubernetesfiles",
 			Images: []parse.IImage{
-				test_utils.MakeImage(kind.Dockerfile, "redis", "latest", "", map[string]interface{}{
+				parse.NewImage(kind.Dockerfile, "redis", "latest", "", map[string]interface{}{
 					"position": 0,
 					"path":     "Dockerfile",
-				}),
-				test_utils.MakeImage(kind.Dockerfile, "redis", "latest", test_utils.RedisLatestSHA, map[string]interface{}{
+				}, nil),
+				parse.NewImage(kind.Dockerfile, "redis", "latest", test_utils.RedisLatestSHA, map[string]interface{}{
 					"position": 2,
 					"path":     "Dockerfile",
-				}),
-				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", "", map[string]interface{}{
+				}, nil),
+				parse.NewImage(kind.Dockerfile, "busybox", "latest", "", map[string]interface{}{
 					"position": 1,
 					"path":     "Dockerfile",
-				}),
-				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
+				}, nil),
+				parse.NewImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
 					"position":    0,
 					"path":        "docker-compose.yml",
 					"serviceName": "svc",
-				}),
-				test_utils.MakeImage(kind.Composefile, "golang", "latest", "", map[string]interface{}{
+				}, nil),
+				parse.NewImage(kind.Composefile, "golang", "latest", "", map[string]interface{}{
 					"position":    0,
 					"path":        "docker-compose.yml",
 					"serviceName": "anothersvc",
-				}),
-				test_utils.MakeImage(kind.Kubernetesfile, "busybox", "latest", "", map[string]interface{}{
+				}, nil),
+				parse.NewImage(kind.Kubernetesfile, "busybox", "latest", "", map[string]interface{}{
 					"path":          "pod.yml",
 					"containerName": "busybox",
 					"docPosition":   0,
 					"imagePosition": 1,
-				}),
-				test_utils.MakeImage(kind.Kubernetesfile, "golang", "latest", test_utils.GolangLatestSHA, map[string]interface{}{
+				}, nil),
+				parse.NewImage(kind.Kubernetesfile, "golang", "latest", test_utils.GolangLatestSHA, map[string]interface{}{
 					"path":          "pod.yml",
 					"containerName": "golang",
 					"docPosition":   0,
 					"imagePosition": 0,
-				}),
+				}, nil),
 			},
 			Expected: []parse.IImage{
-				test_utils.MakeImage(kind.Dockerfile, "redis", "latest", test_utils.RedisLatestSHA, map[string]interface{}{
+				parse.NewImage(kind.Dockerfile, "redis", "latest", test_utils.RedisLatestSHA, map[string]interface{}{
 					"position": 0,
 					"path":     "Dockerfile",
-				}),
-				test_utils.MakeImage(kind.Dockerfile, "redis", "latest", test_utils.RedisLatestSHA, map[string]interface{}{
+				}, nil),
+				parse.NewImage(kind.Dockerfile, "redis", "latest", test_utils.RedisLatestSHA, map[string]interface{}{
 					"position": 2,
 					"path":     "Dockerfile",
-				}),
-				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", test_utils.BusyboxLatestSHA, map[string]interface{}{
+				}, nil),
+				parse.NewImage(kind.Dockerfile, "busybox", "latest", test_utils.BusyboxLatestSHA, map[string]interface{}{
 					"position": 1,
 					"path":     "Dockerfile",
-				}),
-				test_utils.MakeImage(kind.Composefile, "busybox", "latest", test_utils.BusyboxLatestSHA, map[string]interface{}{
+				}, nil),
+				parse.NewImage(kind.Composefile, "busybox", "latest", test_utils.BusyboxLatestSHA, map[string]interface{}{
 					"position":    0,
 					"path":        "docker-compose.yml",
 					"serviceName": "svc",
-				}),
-				test_utils.MakeImage(kind.Composefile, "golang", "latest", test_utils.GolangLatestSHA, map[string]interface{}{
+				}, nil),
+				parse.NewImage(kind.Composefile, "golang", "latest", test_utils.GolangLatestSHA, map[string]interface{}{
 					"position":    0,
 					"path":        "docker-compose.yml",
 					"serviceName": "anothersvc",
-				}),
-				test_utils.MakeImage(kind.Kubernetesfile, "busybox", "latest", test_utils.BusyboxLatestSHA, map[string]interface{}{
+				}, nil),
+				parse.NewImage(kind.Kubernetesfile, "busybox", "latest", test_utils.BusyboxLatestSHA, map[string]interface{}{
 					"path":          "pod.yml",
 					"containerName": "busybox",
 					"docPosition":   0,
 					"imagePosition": 1,
-				}),
-				test_utils.MakeImage(kind.Kubernetesfile, "golang", "latest", test_utils.GolangLatestSHA, map[string]interface{}{
+				}, nil),
+				parse.NewImage(kind.Kubernetesfile, "golang", "latest", test_utils.GolangLatestSHA, map[string]interface{}{
 					"path":          "pod.yml",
 					"containerName": "golang",
 					"docPosition":   0,
 					"imagePosition": 0,
-				}),
+				}, nil),
 			},
 			ExpectedNumNetworkCalls: 3,
 		},

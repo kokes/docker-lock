@@ -46,18 +46,24 @@ spec:
 `),
 			},
 			Expected: []parse.IImage{
-				test_utils.MakeImage(kind.Kubernetesfile, "busybox", "latest", "", map[string]interface{}{
-					"path":          "pod.yaml",
-					"docPosition":   0,
-					"imagePosition": 0,
-					"containerName": "busybox",
-				}),
-				test_utils.MakeImage(kind.Kubernetesfile, "golang", "latest", "", map[string]interface{}{
-					"path":          "pod.yaml",
-					"docPosition":   0,
-					"imagePosition": 1,
-					"containerName": "golang",
-				}),
+				parse.NewImage(
+					kind.Kubernetesfile, "busybox", "latest", "",
+					map[string]interface{}{
+						"path":          "pod.yaml",
+						"docPosition":   0,
+						"imagePosition": 0,
+						"containerName": "busybox",
+					}, nil,
+				),
+				parse.NewImage(
+					kind.Kubernetesfile, "golang", "latest", "",
+					map[string]interface{}{
+						"path":          "pod.yaml",
+						"docPosition":   0,
+						"imagePosition": 1,
+						"containerName": "golang",
+					}, nil,
+				),
 			},
 		},
 		{
@@ -100,30 +106,42 @@ spec:
 `),
 			},
 			Expected: []parse.IImage{
-				test_utils.MakeImage(kind.Kubernetesfile, "busybox", "latest", "", map[string]interface{}{
-					"path":          "pod.yaml",
-					"docPosition":   0,
-					"imagePosition": 0,
-					"containerName": "busybox",
-				}),
-				test_utils.MakeImage(kind.Kubernetesfile, "golang", "latest", "", map[string]interface{}{
-					"path":          "pod.yaml",
-					"docPosition":   0,
-					"imagePosition": 1,
-					"containerName": "golang",
-				}),
-				test_utils.MakeImage(kind.Kubernetesfile, "redis", "1.0", "123", map[string]interface{}{
-					"path":          "pod.yaml",
-					"docPosition":   1,
-					"imagePosition": 0,
-					"containerName": "redis",
-				}),
-				test_utils.MakeImage(kind.Kubernetesfile, "bash", "v1", "", map[string]interface{}{
-					"path":          "pod.yaml",
-					"docPosition":   1,
-					"imagePosition": 1,
-					"containerName": "bash",
-				}),
+				parse.NewImage(
+					kind.Kubernetesfile, "busybox", "latest", "",
+					map[string]interface{}{
+						"path":          "pod.yaml",
+						"docPosition":   0,
+						"imagePosition": 0,
+						"containerName": "busybox",
+					}, nil,
+				),
+				parse.NewImage(
+					kind.Kubernetesfile, "golang", "latest", "",
+					map[string]interface{}{
+						"path":          "pod.yaml",
+						"docPosition":   0,
+						"imagePosition": 1,
+						"containerName": "golang",
+					}, nil,
+				),
+				parse.NewImage(
+					kind.Kubernetesfile, "redis", "1.0", "123",
+					map[string]interface{}{
+						"path":          "pod.yaml",
+						"docPosition":   1,
+						"imagePosition": 0,
+						"containerName": "redis",
+					}, nil,
+				),
+				parse.NewImage(
+					kind.Kubernetesfile, "bash", "v1", "",
+					map[string]interface{}{
+						"path":          "pod.yaml",
+						"docPosition":   1,
+						"imagePosition": 1,
+						"containerName": "bash",
+					}, nil,
+				),
 			},
 		},
 		{
@@ -168,29 +186,37 @@ spec:
 `),
 			},
 			Expected: []parse.IImage{
-				test_utils.MakeImage(kind.Kubernetesfile, "nginx", "latest", "", map[string]interface{}{
-					"path":          "deployment.yaml",
-					"docPosition":   0,
-					"imagePosition": 0,
-					"containerName": "nginx",
-				}),
-				test_utils.MakeImage(kind.Kubernetesfile, "busybox", "latest", "", map[string]interface{}{
-					"path":          "pod.yaml",
-					"docPosition":   0,
-					"imagePosition": 0,
-					"containerName": "busybox",
-				}),
+				parse.NewImage(
+					kind.Kubernetesfile, "nginx", "latest", "",
+					map[string]interface{}{
+						"path":          "deployment.yaml",
+						"docPosition":   0,
+						"imagePosition": 0,
+						"containerName": "nginx",
+					}, nil,
+				),
+				parse.NewImage(
+					kind.Kubernetesfile, "busybox", "latest", "",
+					map[string]interface{}{
+						"path":          "pod.yaml",
+						"docPosition":   0,
+						"imagePosition": 0,
+						"containerName": "busybox",
+					}, nil,
+				),
 			},
 		},
 	}
 
-	for _, test := range tests { // nolint: dupl
+	for _, test := range tests {
 		test := test
 
 		t.Run(test.Name, func(t *testing.T) {
 			t.Parallel()
 
-			tempDir := test_utils.MakeTempDir(t, kubernetesfileImageParserTestDir)
+			tempDir := test_utils.MakeTempDir(
+				t, kubernetesfileImageParserTestDir,
+			)
 			defer os.RemoveAll(tempDir)
 
 			test_utils.MakeParentDirsInTempDirFromFilePaths(
@@ -203,7 +229,9 @@ spec:
 
 			pathsToParseCh := make(chan collect.IPath, len(pathsToParse))
 			for _, path := range pathsToParse {
-				pathsToParseCh <- collect.NewPath(kind.Kubernetesfile, path, nil)
+				pathsToParseCh <- collect.NewPath(
+					kind.Kubernetesfile, path, nil,
+				)
 			}
 			close(pathsToParseCh)
 
@@ -237,7 +265,9 @@ spec:
 
 			for _, kubernetesfileImage := range test.Expected {
 				metadata := kubernetesfileImage.Metadata()
-				metadata["path"] = filepath.Join(tempDir, metadata["path"].(string))
+				metadata["path"] = filepath.Join(
+					tempDir, metadata["path"].(string),
+				)
 				kubernetesfileImage.SetMetadata(metadata)
 			}
 

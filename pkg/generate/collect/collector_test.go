@@ -19,13 +19,13 @@ func TestPathCollector(t *testing.T) {
 		DefaultPaths  []string
 		ManualPaths   []string
 		Globs         []string
-		Recursive     bool
 		ShouldFail    bool
 		Expected      []string
 		PathsToCreate []string
 	}{
 		{
-			Name:          "Default Path Exists",
+			Name: "Default Path Exists",
+			// TODO: convert strings to IPath
 			DefaultPaths:  []string{"Dockerfile"},
 			PathsToCreate: []string{"Dockerfile"},
 			Expected:      []string{"Dockerfile"},
@@ -35,7 +35,7 @@ func TestPathCollector(t *testing.T) {
 			DefaultPaths: []string{"Dockerfile"},
 		},
 		{
-			Name:          "Do Not Use Default Paths If Other Methods Specified",
+			Name:          "Do Not Use Default Paths If Other Methods chosen",
 			DefaultPaths:  []string{"Dockerfile"},
 			ManualPaths:   []string{"Dockerfile-Manual"},
 			Expected:      []string{"Dockerfile-Manual"},
@@ -95,7 +95,10 @@ func TestPathCollector(t *testing.T) {
 				}
 			}
 
-			collector, err := collect.NewPathCollector(kind.Dockerfile, tempDir, test.DefaultPaths, test.ManualPaths, test.Globs, test.Recursive)
+			collector, err := collect.NewPathCollector(
+				kind.Dockerfile, tempDir, test.DefaultPaths,
+				test.ManualPaths, test.Globs, false,
+			)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -103,12 +106,14 @@ func TestPathCollector(t *testing.T) {
 			var got []string
 
 			done := make(chan struct{})
+			defer close(done)
+
 			for path := range collector.CollectPaths(done) {
 				if path.Err() != nil {
-					close(done)
 					err = path.Err()
 					break
 				}
+
 				got = append(got, path.Path())
 			}
 
@@ -124,6 +129,7 @@ func TestPathCollector(t *testing.T) {
 				t.Fatal(err)
 			}
 
+			// TODO: Assert
 			if !reflect.DeepEqual(expected, got) {
 				t.Fatalf("expected %v, got %v", expected, got)
 			}

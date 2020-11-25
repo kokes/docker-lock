@@ -17,7 +17,6 @@ import (
 
 	"github.com/safe-waters/docker-lock/pkg/generate/collect"
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
-	"github.com/safe-waters/docker-lock/pkg/kind"
 )
 
 const (
@@ -237,6 +236,8 @@ func SortComposefileImageParserResults(
 }
 
 func SortPaths(t *testing.T, paths []collect.IPath) {
+	t.Helper()
+
 	sort.Slice(paths, func(i, j int) bool {
 		switch {
 		case paths[i].Kind() != paths[j].Kind():
@@ -245,16 +246,6 @@ func SortPaths(t *testing.T, paths []collect.IPath) {
 			return paths[i].Path() < paths[j].Path()
 		}
 	})
-}
-
-func MakeImage(
-	kind kind.Kind,
-	name string,
-	tag string,
-	digest string,
-	metadata map[string]interface{},
-) parse.IImage {
-	return parse.NewImage(kind, name, tag, digest, metadata, nil)
 }
 
 func MakeTempDirInCurrentDir(t *testing.T) string {
@@ -267,6 +258,8 @@ func MakeTempDirInCurrentDir(t *testing.T) string {
 }
 
 func generateUUID(t *testing.T) string {
+	t.Helper()
+
 	b := make([]byte, 16)
 
 	_, err := rand.Read(b)

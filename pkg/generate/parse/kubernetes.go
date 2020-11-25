@@ -69,7 +69,9 @@ func (k *kubernetesfileImageParser) ParseFile(
 	if path.Err() != nil {
 		select {
 		case <-done:
-		case kubernetesfileImages <- NewImage(k.kind, "", "", "", nil, path.Err()):
+		case kubernetesfileImages <- NewImage(
+			k.kind, "", "", "", nil, path.Err(),
+		):
 		}
 
 		return
@@ -104,7 +106,9 @@ func (k *kubernetesfileImageParser) ParseFile(
 			if err != io.EOF {
 				select {
 				case <-done:
-				case kubernetesfileImages <- NewImage(k.kind, "", "", "", nil, err):
+				case kubernetesfileImages <- NewImage(
+					k.kind, "", "", "", nil, err,
+				):
 				}
 
 				return

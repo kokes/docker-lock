@@ -203,7 +203,9 @@ func (c *composefileImageParser) parseService(
 			dockerfile = "Dockerfile"
 		}
 
-		dockerfilePath := collect.NewPath(c.kind, filepath.Join(context, dockerfile), nil)
+		dockerfilePath := collect.NewPath(
+			c.kind, filepath.Join(context, dockerfile), nil,
+		)
 
 		buildArgs := map[string]string{}
 

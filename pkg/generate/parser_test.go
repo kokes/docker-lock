@@ -65,30 +65,30 @@ spec:
 `),
 			},
 			Expected: []parse.IImage{
-				test_utils.MakeImage(kind.Dockerfile, "ubuntu", "bionic", "", map[string]interface{}{
+				parse.NewImage(kind.Dockerfile, "ubuntu", "bionic", "", map[string]interface{}{
 					"position": 0,
 					"path":     "Dockerfile",
-				}),
-				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", "", map[string]interface{}{
+				}, nil),
+				parse.NewImage(kind.Dockerfile, "busybox", "latest", "", map[string]interface{}{
 					"position": 1,
 					"path":     "Dockerfile",
-				}),
-				test_utils.MakeImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
+				}, nil),
+				parse.NewImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
 					"servicePosition": 0,
 					"path":            "docker-compose.yml",
 					"serviceName":     "svc",
-				}),
-				test_utils.MakeImage(kind.Composefile, "golang", "latest", "", map[string]interface{}{
+				}, nil),
+				parse.NewImage(kind.Composefile, "golang", "latest", "", map[string]interface{}{
 					"servicePosition": 0,
 					"path":            "docker-compose.yml",
 					"serviceName":     "anothersvc",
-				}),
-				test_utils.MakeImage(kind.Kubernetesfile, "redis", "latest", "", map[string]interface{}{
+				}, nil),
+				parse.NewImage(kind.Kubernetesfile, "redis", "latest", "", map[string]interface{}{
 					"path":          "pod.yml",
 					"imagePosition": 0,
 					"docPosition":   0,
 					"containerName": "redis",
-				}),
+				}, nil),
 			},
 		},
 	}

@@ -34,18 +34,27 @@ FROM node
 `),
 			},
 			Expected: []parse.IImage{
-				test_utils.MakeImage(kind.Dockerfile, "ubuntu", "bionic", "", map[string]interface{}{
-					"path":     "Dockerfile",
-					"position": 0,
-				}),
-				test_utils.MakeImage(kind.Dockerfile, "golang", "1.14", "", map[string]interface{}{
-					"path":     "Dockerfile",
-					"position": 1,
-				}),
-				test_utils.MakeImage(kind.Dockerfile, "node", "latest", "", map[string]interface{}{
-					"path":     "Dockerfile",
-					"position": 2,
-				}),
+				parse.NewImage(
+					kind.Dockerfile, "ubuntu", "bionic", "",
+					map[string]interface{}{
+						"path":     "Dockerfile",
+						"position": 0,
+					}, nil,
+				),
+				parse.NewImage(
+					kind.Dockerfile, "golang", "1.14", "",
+					map[string]interface{}{
+						"path":     "Dockerfile",
+						"position": 1,
+					}, nil,
+				),
+				parse.NewImage(
+					kind.Dockerfile, "node", "latest", "",
+					map[string]interface{}{
+						"path":     "Dockerfile",
+						"position": 2,
+					}, nil,
+				),
 			},
 		},
 		{
@@ -57,10 +66,13 @@ FROM scratch
 `),
 			},
 			Expected: []parse.IImage{
-				test_utils.MakeImage(kind.Dockerfile, "scratch", "", "", map[string]interface{}{
-					"path":     "Dockerfile",
-					"position": 0,
-				}),
+				parse.NewImage(
+					kind.Dockerfile, "scratch", "", "",
+					map[string]interface{}{
+						"path":     "Dockerfile",
+						"position": 0,
+					}, nil,
+				),
 			},
 		},
 		{
@@ -72,10 +84,13 @@ FROM ubuntu@sha256:bae015c28bc7
 `),
 			},
 			Expected: []parse.IImage{
-				test_utils.MakeImage(kind.Dockerfile, "ubuntu", "", "bae015c28bc7", map[string]interface{}{
-					"path":     "Dockerfile",
-					"position": 0,
-				}),
+				parse.NewImage(
+					kind.Dockerfile, "ubuntu", "", "bae015c28bc7",
+					map[string]interface{}{
+						"path":     "Dockerfile",
+						"position": 0,
+					}, nil,
+				),
 			},
 		},
 		{
@@ -87,10 +102,13 @@ FROM --platform=$BUILDPLATFORM ubuntu@sha256:bae015c28bc7
 `),
 			},
 			Expected: []parse.IImage{
-				test_utils.MakeImage(kind.Dockerfile, "ubuntu", "", "bae015c28bc7", map[string]interface{}{
-					"path":     "Dockerfile",
-					"position": 0,
-				}),
+				parse.NewImage(
+					kind.Dockerfile, "ubuntu", "", "bae015c28bc7",
+					map[string]interface{}{
+						"path":     "Dockerfile",
+						"position": 0,
+					}, nil,
+				),
 			},
 		},
 		{
@@ -102,10 +120,13 @@ FROM ubuntu:bionic@sha256:bae015c28bc7
 `),
 			},
 			Expected: []parse.IImage{
-				test_utils.MakeImage(kind.Dockerfile, "ubuntu", "bionic", "bae015c28bc7", map[string]interface{}{
-					"path":     "Dockerfile",
-					"position": 0,
-				}),
+				parse.NewImage(
+					kind.Dockerfile, "ubuntu", "bionic", "bae015c28bc7",
+					map[string]interface{}{
+						"path":     "Dockerfile",
+						"position": 0,
+					}, nil,
+				),
 			},
 		},
 		{
@@ -117,10 +138,13 @@ FROM localhost:5000/ubuntu:bionic@sha256:bae015c28bc7
 `),
 			},
 			Expected: []parse.IImage{
-				test_utils.MakeImage(kind.Dockerfile, "localhost:5000/ubuntu", "bionic", "bae015c28bc7", map[string]interface{}{
-					"path":     "Dockerfile",
-					"position": 0,
-				}),
+				parse.NewImage(
+					kind.Dockerfile, "localhost:5000/ubuntu", "bionic",
+					"bae015c28bc7", map[string]interface{}{
+						"path":     "Dockerfile",
+						"position": 0,
+					}, nil,
+				),
 			},
 		},
 		{
@@ -135,14 +159,20 @@ FROM ${IMAGE}
 `),
 			},
 			Expected: []parse.IImage{
-				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", "", map[string]interface{}{
-					"path":     "Dockerfile",
-					"position": 0,
-				}),
-				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", "", map[string]interface{}{
-					"path":     "Dockerfile",
-					"position": 1,
-				}),
+				parse.NewImage(
+					kind.Dockerfile, "busybox", "latest", "",
+					map[string]interface{}{
+						"path":     "Dockerfile",
+						"position": 0,
+					}, nil,
+				),
+				parse.NewImage(
+					kind.Dockerfile, "busybox", "latest", "",
+					map[string]interface{}{
+						"path":     "Dockerfile",
+						"position": 1,
+					}, nil,
+				),
 			},
 		},
 		{
@@ -156,14 +186,20 @@ FROM ubuntu as worker
 `),
 			},
 			Expected: []parse.IImage{
-				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", "", map[string]interface{}{
-					"path":     "Dockerfile",
-					"position": 0,
-				}),
-				test_utils.MakeImage(kind.Dockerfile, "ubuntu", "latest", "", map[string]interface{}{
-					"path":     "Dockerfile",
-					"position": 1,
-				}),
+				parse.NewImage(
+					kind.Dockerfile, "busybox", "latest", "",
+					map[string]interface{}{
+						"path":     "Dockerfile",
+						"position": 0,
+					}, nil,
+				),
+				parse.NewImage(
+					kind.Dockerfile, "ubuntu", "latest", "",
+					map[string]interface{}{
+						"path":     "Dockerfile",
+						"position": 1,
+					}, nil,
+				),
 			},
 		},
 		{
@@ -180,22 +216,34 @@ FROM busybox
 `),
 			},
 			Expected: []parse.IImage{
-				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", "", map[string]interface{}{
-					"path":     "Dockerfile-one",
-					"position": 0,
-				}),
-				test_utils.MakeImage(kind.Dockerfile, "ubuntu", "latest", "", map[string]interface{}{
-					"path":     "Dockerfile-one",
-					"position": 1,
-				}),
-				test_utils.MakeImage(kind.Dockerfile, "ubuntu", "latest", "", map[string]interface{}{
-					"path":     "Dockerfile-two",
-					"position": 0,
-				}),
-				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", "", map[string]interface{}{
-					"path":     "Dockerfile-two",
-					"position": 1,
-				}),
+				parse.NewImage(
+					kind.Dockerfile, "busybox", "latest", "",
+					map[string]interface{}{
+						"path":     "Dockerfile-one",
+						"position": 0,
+					}, nil,
+				),
+				parse.NewImage(
+					kind.Dockerfile, "ubuntu", "latest", "",
+					map[string]interface{}{
+						"path":     "Dockerfile-one",
+						"position": 1,
+					}, nil,
+				),
+				parse.NewImage(
+					kind.Dockerfile, "ubuntu", "latest", "",
+					map[string]interface{}{
+						"path":     "Dockerfile-two",
+						"position": 0,
+					}, nil,
+				),
+				parse.NewImage(
+					kind.Dockerfile, "busybox", "latest", "",
+					map[string]interface{}{
+						"path":     "Dockerfile-two",
+						"position": 1,
+					}, nil,
+				),
 			},
 		},
 		{

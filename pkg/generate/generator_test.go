@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	cmd_generate "github.com/safe-waters/docker-lock/cmd/generate"
 	"github.com/safe-waters/docker-lock/pkg/generate"
 	"github.com/safe-waters/docker-lock/pkg/generate/collect"
 	"github.com/safe-waters/docker-lock/pkg/generate/format"
@@ -25,9 +24,7 @@ func TestGenerator(t *testing.T) {
 		Name          string
 		PathsToCreate []string
 		Contents      [][]byte
-		Flags         *cmd_generate.Flags
 		Expected      map[string]map[string][]interface{}
-		ShouldFail    bool
 	}{
 		{
 			Name:          "One Kind",

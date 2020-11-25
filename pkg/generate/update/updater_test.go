@@ -26,21 +26,32 @@ func TestImageDigestUpdater(t *testing.T) {
 		{
 			Name: "Image Without Digest",
 			Images: []parse.IImage{
-				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", "", nil),
+				parse.NewImage(
+					kind.Dockerfile, "busybox", "latest", "", nil, nil,
+				),
 			},
 			ExpectedNumNetworkCalls: 1,
 			ExpectedImages: []parse.IImage{
-				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", test_utils.BusyboxLatestSHA, nil),
+				parse.NewImage(
+					kind.Dockerfile, "busybox", "latest",
+					test_utils.BusyboxLatestSHA, nil, nil,
+				),
 			},
 		},
 		{
 			Name: "Image With Digest",
 			Images: []parse.IImage{
-				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", test_utils.BusyboxLatestSHA, nil),
+				parse.NewImage(
+					kind.Dockerfile, "busybox", "latest",
+					test_utils.BusyboxLatestSHA, nil, nil,
+				),
 			},
 			ExpectedNumNetworkCalls: 0,
 			ExpectedImages: []parse.IImage{
-				test_utils.MakeImage(kind.Dockerfile, "busybox", "latest", test_utils.BusyboxLatestSHA, nil),
+				parse.NewImage(
+					kind.Dockerfile, "busybox", "latest",
+					test_utils.BusyboxLatestSHA, nil, nil,
+				),
 			},
 		},
 	}

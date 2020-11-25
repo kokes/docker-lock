@@ -64,7 +64,9 @@ func (i *imageDigestUpdater) UpdateDigests(
 				if err != nil {
 					select {
 					case <-done:
-					case updatedImages <- parse.NewImage(image.Kind(), "", "", "", nil, err):
+					case updatedImages <- parse.NewImage(
+						image.Kind(), "", "", "", nil, err,
+					):
 					}
 
 					return

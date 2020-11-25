@@ -144,7 +144,9 @@ func (i *image) Err() error {
 	return i.err
 }
 
-func (i *image) deepCopyMetadata(m map[string]interface{}) map[string]interface{} {
+func (i *image) deepCopyMetadata(
+	m map[string]interface{},
+) map[string]interface{} {
 	cp := make(map[string]interface{})
 
 	for k, v := range m {

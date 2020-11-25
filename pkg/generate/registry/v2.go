@@ -72,6 +72,9 @@ func (v *V2) Digest(repo, ref, token string) (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		return "", fmt.Errorf("failed to fetch a digest from a remote registry: %v", resp.Status)
+	}
 
 	digest := resp.Header.Get("Docker-Content-Digest")
 
@@ -104,6 +107,9 @@ func (v *V2) Token(
 		return "", err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		return "", fmt.Errorf("failed to fetch a token from a remote registry: %v", resp.Status)
+	}
 
 	token, err := extractor.FromBody(resp.Body)
 	if err != nil {

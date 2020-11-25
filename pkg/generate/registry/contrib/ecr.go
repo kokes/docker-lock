@@ -56,6 +56,12 @@ func loadECREndpoint(configPath string) (string, string, error) {
 
 	for k, _ := range config.Auths {
 		// TODO: can I be authed into multiple accounts?
+		// This is also wrong for two more reasons:
+		// 1) doesn't need to be .com, can be .com.cn
+		// 2) it might be better to split on "." and take the second to last part (accounting for
+		//    composite top-level TLDs, ouch), because there is a varying number of parts in this.
+		// see more URLs at https://docs.aws.amazon.com/general/latest/gr/ecr.html#ecr-docker-endpoints
+		// will be best if we won't need the region in the end :-)
 		if strings.HasSuffix(k, ".amazonaws.com") {
 			// parse region out of "0123456789.dkr.ecr.us-east-1.amazonaws.com"
 			parts := strings.SplitN(k, ".", 4)

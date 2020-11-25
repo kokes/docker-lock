@@ -8,7 +8,7 @@ import (
 	"github.com/safe-waters/docker-lock/pkg/generate/collect"
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
 	"github.com/safe-waters/docker-lock/pkg/kind"
-	"github.com/safe-waters/docker-lock/pkg/test_utils"
+	"github.com/safe-waters/docker-lock/pkg/testutils"
 )
 
 const composefileImageParserTestDir = "composefileParser-tests"
@@ -553,17 +553,17 @@ services:
 		t.Run(test.Name, func(t *testing.T) {
 			t.Parallel()
 
-			tempDir := test_utils.MakeTempDir(t, composefileImageParserTestDir)
+			tempDir := testutils.MakeTempDir(t, composefileImageParserTestDir)
 			defer os.RemoveAll(tempDir)
 
 			for k, v := range test.EnvironmentVariables {
 				os.Setenv(k, v)
 			}
 
-			test_utils.MakeParentDirsInTempDirFromFilePaths(
+			testutils.MakeParentDirsInTempDirFromFilePaths(
 				t, tempDir, test.DockerfilePaths,
 			)
-			test_utils.MakeParentDirsInTempDirFromFilePaths(
+			testutils.MakeParentDirsInTempDirFromFilePaths(
 				t, tempDir, test.ComposefilePaths,
 			)
 			if len(test.DotEnvContents) != 0 {
@@ -573,15 +573,15 @@ services:
 					dotEnvFiles[i] = ".env"
 				}
 
-				_ = test_utils.WriteFilesToTempDir(
+				_ = testutils.WriteFilesToTempDir(
 					t, tempDir, dotEnvFiles, test.DotEnvContents,
 				)
 			}
 
-			_ = test_utils.WriteFilesToTempDir(
+			_ = testutils.WriteFilesToTempDir(
 				t, tempDir, test.DockerfilePaths, test.DockerfileContents,
 			)
-			pathsToParse := test_utils.WriteFilesToTempDir(
+			pathsToParse := testutils.WriteFilesToTempDir(
 				t, tempDir, test.ComposefilePaths, test.ComposefileContents,
 			)
 
@@ -629,9 +629,9 @@ services:
 
 				composefileImage.SetMetadata(metadata)
 			}
-			test_utils.SortComposefileImageParserResults(t, got)
+			testutils.SortComposefileImageParserResults(t, got)
 
-			test_utils.AssertImagesEqual(t, test.Expected, got)
+			testutils.AssertImagesEqual(t, test.Expected, got)
 		})
 	}
 }

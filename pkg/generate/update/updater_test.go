@@ -11,7 +11,7 @@ import (
 	"github.com/safe-waters/docker-lock/pkg/generate/registry/firstparty"
 	"github.com/safe-waters/docker-lock/pkg/generate/update"
 	"github.com/safe-waters/docker-lock/pkg/kind"
-	"github.com/safe-waters/docker-lock/pkg/test_utils"
+	"github.com/safe-waters/docker-lock/pkg/testutils"
 )
 
 func TestImageDigestUpdater(t *testing.T) {
@@ -34,7 +34,7 @@ func TestImageDigestUpdater(t *testing.T) {
 			ExpectedImages: []parse.IImage{
 				parse.NewImage(
 					kind.Dockerfile, "busybox", "latest",
-					test_utils.BusyboxLatestSHA, nil, nil,
+					testutils.BusyboxLatestSHA, nil, nil,
 				),
 			},
 		},
@@ -43,14 +43,14 @@ func TestImageDigestUpdater(t *testing.T) {
 			Images: []parse.IImage{
 				parse.NewImage(
 					kind.Dockerfile, "busybox", "latest",
-					test_utils.BusyboxLatestSHA, nil, nil,
+					testutils.BusyboxLatestSHA, nil, nil,
 				),
 			},
 			ExpectedNumNetworkCalls: 0,
 			ExpectedImages: []parse.IImage{
 				parse.NewImage(
 					kind.Dockerfile, "busybox", "latest",
-					test_utils.BusyboxLatestSHA, nil, nil,
+					testutils.BusyboxLatestSHA, nil, nil,
 				),
 			},
 		},
@@ -64,7 +64,7 @@ func TestImageDigestUpdater(t *testing.T) {
 
 			var gotNumNetworkCalls uint64
 
-			server := test_utils.MockServer(t, &gotNumNetworkCalls)
+			server := testutils.MockServer(t, &gotNumNetworkCalls)
 			defer server.Close()
 
 			client := &registry.HTTPClient{
@@ -109,11 +109,11 @@ func TestImageDigestUpdater(t *testing.T) {
 				gotImages = append(gotImages, updatedImage)
 			}
 
-			test_utils.AssertImagesEqual(
+			testutils.AssertImagesEqual(
 				t, test.ExpectedImages, gotImages,
 			)
 
-			test_utils.AssertNumNetworkCallsEqual(
+			testutils.AssertNumNetworkCallsEqual(
 				t, test.ExpectedNumNetworkCalls, gotNumNetworkCalls,
 			)
 		})

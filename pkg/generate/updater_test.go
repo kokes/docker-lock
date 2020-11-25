@@ -12,7 +12,7 @@ import (
 	"github.com/safe-waters/docker-lock/pkg/generate/registry/firstparty"
 	"github.com/safe-waters/docker-lock/pkg/generate/update"
 	"github.com/safe-waters/docker-lock/pkg/kind"
-	"github.com/safe-waters/docker-lock/pkg/test_utils"
+	"github.com/safe-waters/docker-lock/pkg/testutils"
 )
 
 func TestImageDigestUpdater(t *testing.T) {
@@ -31,7 +31,7 @@ func TestImageDigestUpdater(t *testing.T) {
 					"position": 0,
 					"path":     "Dockerfile",
 				}, nil),
-				parse.NewImage(kind.Dockerfile, "redis", "latest", test_utils.RedisLatestSHA, map[string]interface{}{
+				parse.NewImage(kind.Dockerfile, "redis", "latest", testutils.RedisLatestSHA, map[string]interface{}{
 					"position": 2,
 					"path":     "Dockerfile",
 				}, nil),
@@ -55,7 +55,7 @@ func TestImageDigestUpdater(t *testing.T) {
 					"docPosition":   0,
 					"imagePosition": 1,
 				}, nil),
-				parse.NewImage(kind.Kubernetesfile, "golang", "latest", test_utils.GolangLatestSHA, map[string]interface{}{
+				parse.NewImage(kind.Kubernetesfile, "golang", "latest", testutils.GolangLatestSHA, map[string]interface{}{
 					"path":          "pod.yml",
 					"containerName": "golang",
 					"docPosition":   0,
@@ -63,35 +63,35 @@ func TestImageDigestUpdater(t *testing.T) {
 				}, nil),
 			},
 			Expected: []parse.IImage{
-				parse.NewImage(kind.Dockerfile, "redis", "latest", test_utils.RedisLatestSHA, map[string]interface{}{
+				parse.NewImage(kind.Dockerfile, "redis", "latest", testutils.RedisLatestSHA, map[string]interface{}{
 					"position": 0,
 					"path":     "Dockerfile",
 				}, nil),
-				parse.NewImage(kind.Dockerfile, "redis", "latest", test_utils.RedisLatestSHA, map[string]interface{}{
+				parse.NewImage(kind.Dockerfile, "redis", "latest", testutils.RedisLatestSHA, map[string]interface{}{
 					"position": 2,
 					"path":     "Dockerfile",
 				}, nil),
-				parse.NewImage(kind.Dockerfile, "busybox", "latest", test_utils.BusyboxLatestSHA, map[string]interface{}{
+				parse.NewImage(kind.Dockerfile, "busybox", "latest", testutils.BusyboxLatestSHA, map[string]interface{}{
 					"position": 1,
 					"path":     "Dockerfile",
 				}, nil),
-				parse.NewImage(kind.Composefile, "busybox", "latest", test_utils.BusyboxLatestSHA, map[string]interface{}{
+				parse.NewImage(kind.Composefile, "busybox", "latest", testutils.BusyboxLatestSHA, map[string]interface{}{
 					"position":    0,
 					"path":        "docker-compose.yml",
 					"serviceName": "svc",
 				}, nil),
-				parse.NewImage(kind.Composefile, "golang", "latest", test_utils.GolangLatestSHA, map[string]interface{}{
+				parse.NewImage(kind.Composefile, "golang", "latest", testutils.GolangLatestSHA, map[string]interface{}{
 					"position":    0,
 					"path":        "docker-compose.yml",
 					"serviceName": "anothersvc",
 				}, nil),
-				parse.NewImage(kind.Kubernetesfile, "busybox", "latest", test_utils.BusyboxLatestSHA, map[string]interface{}{
+				parse.NewImage(kind.Kubernetesfile, "busybox", "latest", testutils.BusyboxLatestSHA, map[string]interface{}{
 					"path":          "pod.yml",
 					"containerName": "busybox",
 					"docPosition":   0,
 					"imagePosition": 1,
 				}, nil),
-				parse.NewImage(kind.Kubernetesfile, "golang", "latest", test_utils.GolangLatestSHA, map[string]interface{}{
+				parse.NewImage(kind.Kubernetesfile, "golang", "latest", testutils.GolangLatestSHA, map[string]interface{}{
 					"path":          "pod.yml",
 					"containerName": "golang",
 					"docPosition":   0,
@@ -110,7 +110,7 @@ func TestImageDigestUpdater(t *testing.T) {
 
 			var gotNumNetworkCalls uint64
 
-			server := test_utils.MockServer(t, &gotNumNetworkCalls)
+			server := testutils.MockServer(t, &gotNumNetworkCalls)
 			defer server.Close()
 
 			client := &registry.HTTPClient{
@@ -160,9 +160,9 @@ func TestImageDigestUpdater(t *testing.T) {
 			sortImages(test.Expected)
 			sortImages(got)
 
-			test_utils.AssertImagesEqual(t, test.Expected, got)
+			testutils.AssertImagesEqual(t, test.Expected, got)
 
-			test_utils.AssertNumNetworkCallsEqual(
+			testutils.AssertNumNetworkCallsEqual(
 				t, test.ExpectedNumNetworkCalls, gotNumNetworkCalls,
 			)
 		})

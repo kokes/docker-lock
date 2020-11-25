@@ -8,7 +8,7 @@ import (
 	"github.com/safe-waters/docker-lock/pkg/generate/collect"
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
 	"github.com/safe-waters/docker-lock/pkg/kind"
-	"github.com/safe-waters/docker-lock/pkg/test_utils"
+	"github.com/safe-waters/docker-lock/pkg/testutils"
 )
 
 const kubernetesfileImageParserTestDir = "kubernetesfileParser-tests"
@@ -214,15 +214,15 @@ spec:
 		t.Run(test.Name, func(t *testing.T) {
 			t.Parallel()
 
-			tempDir := test_utils.MakeTempDir(
+			tempDir := testutils.MakeTempDir(
 				t, kubernetesfileImageParserTestDir,
 			)
 			defer os.RemoveAll(tempDir)
 
-			test_utils.MakeParentDirsInTempDirFromFilePaths(
+			testutils.MakeParentDirsInTempDirFromFilePaths(
 				t, tempDir, test.KubernetesfilePaths,
 			)
-			pathsToParse := test_utils.WriteFilesToTempDir(
+			pathsToParse := testutils.WriteFilesToTempDir(
 				t, tempDir, test.KubernetesfilePaths,
 				test.KubernetesfileContents,
 			)
@@ -261,7 +261,7 @@ spec:
 				got = append(got, kubernetesfileImage)
 			}
 
-			test_utils.SortKubernetesfileImageParserResults(t, got)
+			testutils.SortKubernetesfileImageParserResults(t, got)
 
 			for _, kubernetesfileImage := range test.Expected {
 				metadata := kubernetesfileImage.Metadata()
@@ -271,7 +271,7 @@ spec:
 				kubernetesfileImage.SetMetadata(metadata)
 			}
 
-			test_utils.AssertImagesEqual(t, test.Expected, got)
+			testutils.AssertImagesEqual(t, test.Expected, got)
 		})
 	}
 }

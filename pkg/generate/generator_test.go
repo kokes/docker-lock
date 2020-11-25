@@ -14,7 +14,7 @@ import (
 	"github.com/safe-waters/docker-lock/pkg/generate/registry"
 	"github.com/safe-waters/docker-lock/pkg/generate/update"
 	"github.com/safe-waters/docker-lock/pkg/kind"
-	"github.com/safe-waters/docker-lock/pkg/test_utils"
+	"github.com/safe-waters/docker-lock/pkg/testutils"
 )
 
 func TestGenerator(t *testing.T) {
@@ -42,12 +42,12 @@ FROM busybox
 						map[string]string{
 							"name":   "golang",
 							"tag":    "latest",
-							"digest": test_utils.GolangLatestSHA,
+							"digest": testutils.GolangLatestSHA,
 						},
 						map[string]string{
 							"name":   "busybox",
 							"tag":    "latest",
-							"digest": test_utils.BusyboxLatestSHA,
+							"digest": testutils.BusyboxLatestSHA,
 						},
 					},
 				},
@@ -95,12 +95,12 @@ spec:
 						map[string]string{
 							"name":   "golang",
 							"tag":    "latest",
-							"digest": test_utils.GolangLatestSHA,
+							"digest": testutils.GolangLatestSHA,
 						},
 						map[string]string{
 							"name":   "busybox",
 							"tag":    "latest",
-							"digest": test_utils.BusyboxLatestSHA,
+							"digest": testutils.BusyboxLatestSHA,
 						},
 					},
 				},
@@ -109,21 +109,21 @@ spec:
 						map[string]string{
 							"name":       "golang",
 							"tag":        "latest",
-							"digest":     test_utils.GolangLatestSHA,
+							"digest":     testutils.GolangLatestSHA,
 							"service":    "database",
 							"dockerfile": "Dockerfile",
 						},
 						map[string]string{
 							"name":       "busybox",
 							"tag":        "latest",
-							"digest":     test_utils.BusyboxLatestSHA,
+							"digest":     testutils.BusyboxLatestSHA,
 							"service":    "database",
 							"dockerfile": "Dockerfile",
 						},
 						map[string]string{
 							"name":    "golang",
 							"tag":     "latest",
-							"digest":  test_utils.GolangLatestSHA,
+							"digest":  testutils.GolangLatestSHA,
 							"service": "web",
 						},
 					},
@@ -154,10 +154,10 @@ spec:
 		t.Run(test.Name, func(t *testing.T) {
 			t.Parallel()
 
-			tempDir := test_utils.MakeTempDirInCurrentDir(t)
+			tempDir := testutils.MakeTempDirInCurrentDir(t)
 			defer os.RemoveAll(tempDir)
 
-			test_utils.WriteFilesToTempDir(
+			testutils.WriteFilesToTempDir(
 				t, tempDir, test.PathsToCreate, test.Contents,
 			)
 
@@ -193,7 +193,7 @@ spec:
 
 			var gotNumNetworkCalls uint64
 
-			server := test_utils.MockServer(t, &gotNumNetworkCalls)
+			server := testutils.MockServer(t, &gotNumNetworkCalls)
 			defer server.Close()
 
 			client := &registry.HTTPClient{

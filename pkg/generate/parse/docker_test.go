@@ -8,7 +8,7 @@ import (
 	"github.com/safe-waters/docker-lock/pkg/generate/collect"
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
 	"github.com/safe-waters/docker-lock/pkg/kind"
-	"github.com/safe-waters/docker-lock/pkg/test_utils"
+	"github.com/safe-waters/docker-lock/pkg/testutils"
 )
 
 const dockerfileImageParserTestDir = "dockerfileParser-tests"
@@ -275,13 +275,13 @@ FROM
 		t.Run(test.Name, func(t *testing.T) {
 			t.Parallel()
 
-			tempDir := test_utils.MakeTempDir(t, dockerfileImageParserTestDir)
+			tempDir := testutils.MakeTempDir(t, dockerfileImageParserTestDir)
 			defer os.RemoveAll(tempDir)
 
-			test_utils.MakeParentDirsInTempDirFromFilePaths(
+			testutils.MakeParentDirsInTempDirFromFilePaths(
 				t, tempDir, test.DockerfilePaths,
 			)
-			pathsToParse := test_utils.WriteFilesToTempDir(
+			pathsToParse := testutils.WriteFilesToTempDir(
 				t, tempDir, test.DockerfilePaths, test.DockerfileContents,
 			)
 
@@ -317,7 +317,7 @@ FROM
 				got = append(got, dockerfileImage)
 			}
 
-			test_utils.SortDockerfileImageParserResults(t, got)
+			testutils.SortDockerfileImageParserResults(t, got)
 
 			for _, dockerfileImage := range test.Expected {
 				dockerfileImage.SetMetadata(map[string]interface{}{
@@ -328,7 +328,7 @@ FROM
 				})
 			}
 
-			test_utils.AssertImagesEqual(t, test.Expected, got)
+			testutils.AssertImagesEqual(t, test.Expected, got)
 		})
 	}
 }

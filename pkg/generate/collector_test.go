@@ -9,7 +9,7 @@ import (
 	"github.com/safe-waters/docker-lock/pkg/generate"
 	"github.com/safe-waters/docker-lock/pkg/generate/collect"
 	"github.com/safe-waters/docker-lock/pkg/kind"
-	"github.com/safe-waters/docker-lock/pkg/test_utils"
+	"github.com/safe-waters/docker-lock/pkg/testutils"
 )
 
 func TestPathCollector(t *testing.T) {
@@ -39,13 +39,13 @@ func TestPathCollector(t *testing.T) {
 		t.Run(test.Name, func(t *testing.T) {
 			t.Parallel()
 
-			tempDir := test_utils.MakeTempDirInCurrentDir(t)
+			tempDir := testutils.MakeTempDirInCurrentDir(t)
 			defer os.RemoveAll(tempDir)
 
 			var expected []collect.IPath
 
 			pathsToCreateContents := make([][]byte, len(test.PathsToCreate))
-			test_utils.WriteFilesToTempDir(
+			testutils.WriteFilesToTempDir(
 				t, tempDir, test.PathsToCreate, pathsToCreateContents,
 			)
 
@@ -81,8 +81,8 @@ func TestPathCollector(t *testing.T) {
 				got = append(got, path)
 			}
 
-			test_utils.SortPaths(t, expected)
-			test_utils.SortPaths(t, got)
+			testutils.SortPaths(t, expected)
+			testutils.SortPaths(t, got)
 
 			if !reflect.DeepEqual(expected, got) {
 				t.Fatalf("expected %v, got %v", test.Expected, got)

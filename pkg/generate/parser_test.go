@@ -10,7 +10,7 @@ import (
 	"github.com/safe-waters/docker-lock/pkg/generate/collect"
 	"github.com/safe-waters/docker-lock/pkg/generate/parse"
 	"github.com/safe-waters/docker-lock/pkg/kind"
-	"github.com/safe-waters/docker-lock/pkg/test_utils"
+	"github.com/safe-waters/docker-lock/pkg/testutils"
 )
 
 func TestImageParser(t *testing.T) {
@@ -65,30 +65,45 @@ spec:
 `),
 			},
 			Expected: []parse.IImage{
-				parse.NewImage(kind.Dockerfile, "ubuntu", "bionic", "", map[string]interface{}{
-					"position": 0,
-					"path":     "Dockerfile",
-				}, nil),
-				parse.NewImage(kind.Dockerfile, "busybox", "latest", "", map[string]interface{}{
-					"position": 1,
-					"path":     "Dockerfile",
-				}, nil),
-				parse.NewImage(kind.Composefile, "busybox", "latest", "", map[string]interface{}{
-					"servicePosition": 0,
-					"path":            "docker-compose.yml",
-					"serviceName":     "svc",
-				}, nil),
-				parse.NewImage(kind.Composefile, "golang", "latest", "", map[string]interface{}{
-					"servicePosition": 0,
-					"path":            "docker-compose.yml",
-					"serviceName":     "anothersvc",
-				}, nil),
-				parse.NewImage(kind.Kubernetesfile, "redis", "latest", "", map[string]interface{}{
-					"path":          "pod.yml",
-					"imagePosition": 0,
-					"docPosition":   0,
-					"containerName": "redis",
-				}, nil),
+				parse.NewImage(
+					kind.Dockerfile, "ubuntu", "bionic", "",
+					map[string]interface{}{
+						"position": 0,
+						"path":     "Dockerfile",
+					}, nil,
+				),
+				parse.NewImage(
+					kind.Dockerfile, "busybox", "latest", "",
+					map[string]interface{}{
+						"position": 1,
+						"path":     "Dockerfile",
+					}, nil,
+				),
+				parse.NewImage(
+					kind.Composefile, "busybox", "latest", "",
+					map[string]interface{}{
+						"servicePosition": 0,
+						"path":            "docker-compose.yml",
+						"serviceName":     "svc",
+					}, nil,
+				),
+				parse.NewImage(
+					kind.Composefile, "golang", "latest", "",
+					map[string]interface{}{
+						"servicePosition": 0,
+						"path":            "docker-compose.yml",
+						"serviceName":     "anothersvc",
+					}, nil,
+				),
+				parse.NewImage(
+					kind.Kubernetesfile, "redis", "latest", "",
+					map[string]interface{}{
+						"path":          "pod.yml",
+						"imagePosition": 0,
+						"docPosition":   0,
+						"containerName": "redis",
+					}, nil,
+				),
 			},
 		},
 	}
@@ -99,16 +114,16 @@ spec:
 		t.Run(test.Name, func(t *testing.T) {
 			t.Parallel()
 
-			tempDir := test_utils.MakeTempDir(t, "")
+			tempDir := testutils.MakeTempDir(t, "")
 			defer os.RemoveAll(tempDir)
 
-			dockerfilePaths := test_utils.WriteFilesToTempDir(
+			dockerfilePaths := testutils.WriteFilesToTempDir(
 				t, tempDir, test.DockerfilePaths, test.DockerfileContents,
 			)
-			composefilePaths := test_utils.WriteFilesToTempDir(
+			composefilePaths := testutils.WriteFilesToTempDir(
 				t, tempDir, test.ComposefilePaths, test.ComposefileContents,
 			)
-			kubernetesfilePaths := test_utils.WriteFilesToTempDir(
+			kubernetesfilePaths := testutils.WriteFilesToTempDir(
 				t, tempDir, test.KubernetesfilePaths,
 				test.KubernetesfileContents,
 			)
@@ -132,13 +147,18 @@ spec:
 			close(anyPaths)
 
 			dockerfileImageParser := parse.NewDockerfileImageParser()
-			composefileImageParser, err := parse.NewComposefileImageParser(dockerfileImageParser)
+			composefileImageParser, err := parse.NewComposefileImageParser(
+				dockerfileImageParser,
+			)
 			if err != nil {
 				t.Fatal(err)
 			}
 			kubernetesfileImageParser := parse.NewKubernetesfileImageParser()
 
-			imageParser, err := generate.NewImageParser(dockerfileImageParser, composefileImageParser, kubernetesfileImageParser)
+			imageParser, err := generate.NewImageParser(
+				dockerfileImageParser, composefileImageParser,
+				kubernetesfileImageParser,
+			)
 
 			if err != nil {
 				t.Fatal(err)
@@ -170,7 +190,7 @@ spec:
 			sortImages(test.Expected)
 			sortImages(got)
 
-			test_utils.AssertImagesEqual(t, test.Expected, got)
+			testutils.AssertImagesEqual(t, test.Expected, got)
 		})
 	}
 }

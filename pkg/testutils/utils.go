@@ -1,4 +1,4 @@
-package test_utils
+package testutils
 
 import (
 	"bytes"
@@ -40,27 +40,47 @@ func AssertImagesEqual(
 
 	for i < len(expected) {
 		if expected[i].Kind() != got[i].Kind() {
-			t.Fatalf("expected kind %#v, got %#v", expected[i].Kind(), got[i].Kind())
-		}
-		if expected[i].Name() != got[i].Name() {
-			t.Fatalf("expected name %#v, got %#v", expected[i].Name(), got[i].Name())
-		}
-		if expected[i].Tag() != got[i].Tag() {
-			t.Fatalf("expected digest %#v, got %#v", expected[i].Tag(), got[i].Tag())
-		}
-		if expected[i].Digest() != got[i].Digest() {
-			t.Fatalf("expected digest %#v, got %#v", expected[i].Digest(), got[i].Digest())
+			t.Fatalf(
+				"expected kind %#v, got %#v", expected[i].Kind(), got[i].Kind(),
+			)
 		}
 
-		expectedMetadataByt, err := json.MarshalIndent(expected[i].Metadata(), "", "\t")
+		if expected[i].Name() != got[i].Name() {
+			t.Fatalf(
+				"expected name %#v, got %#v", expected[i].Name(), got[i].Name(),
+			)
+		}
+
+		if expected[i].Tag() != got[i].Tag() {
+			t.Fatalf(
+				"expected digest %#v, got %#v", expected[i].Tag(), got[i].Tag(),
+			)
+		}
+
+		if expected[i].Digest() != got[i].Digest() {
+			t.Fatalf(
+				"expected digest %#v, got %#v", expected[i].Digest(),
+				got[i].Digest(),
+			)
+		}
+
+		expectedMetadataByt, err := json.MarshalIndent(
+			expected[i].Metadata(), "", "\t",
+		)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		gotMetadataByt, err := json.MarshalIndent(got[i].Metadata(), "", "\t")
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		if !bytes.Equal(expectedMetadataByt, gotMetadataByt) {
-			t.Fatalf("expected metadata %#v, got %#v", string(expectedMetadataByt), string(gotMetadataByt))
+			t.Fatalf(
+				"expected metadata %#v, got %#v",
+				string(expectedMetadataByt), string(gotMetadataByt),
+			)
 		}
 
 		i++
@@ -188,11 +208,18 @@ func SortDockerfileImageParserResults(
 	t.Helper()
 
 	sort.Slice(results, func(i, j int) bool {
+		var (
+			path1     = results[i].Metadata()["path"].(string)
+			path2     = results[j].Metadata()["path"].(string)
+			position1 = results[i].Metadata()["position"].(int)
+			position2 = results[j].Metadata()["position"].(int)
+		)
+
 		switch {
-		case results[i].Metadata()["path"].(string) != results[j].Metadata()["path"].(string):
-			return results[i].Metadata()["path"].(string) < results[j].Metadata()["path"].(string)
+		case path1 != path2:
+			return path1 < path2
 		default:
-			return results[i].Metadata()["position"].(int) < results[j].Metadata()["position"].(int)
+			return position1 < position2
 		}
 	})
 }
@@ -204,13 +231,22 @@ func SortKubernetesfileImageParserResults(
 	t.Helper()
 
 	sort.Slice(results, func(i, j int) bool {
+		var (
+			path1          = results[i].Metadata()["path"].(string)
+			path2          = results[j].Metadata()["path"].(string)
+			docPosition1   = results[i].Metadata()["docPosition"].(int)
+			docPosition2   = results[j].Metadata()["docPosition"].(int)
+			imagePosition1 = results[i].Metadata()["imagePosition"].(int)
+			imagePosition2 = results[j].Metadata()["imagePosition"].(int)
+		)
+
 		switch {
-		case results[i].Metadata()["path"].(string) != results[j].Metadata()["path"].(string):
-			return results[i].Metadata()["path"].(string) < results[j].Metadata()["path"].(string)
-		case results[i].Metadata()["docPosition"].(int) != results[j].Metadata()["docPosition"].(int):
-			return results[i].Metadata()["docPosition"].(int) < results[j].Metadata()["docPosition"].(int)
+		case path1 != path2:
+			return path1 < path2
+		case docPosition1 != docPosition2:
+			return docPosition1 < docPosition2
 		default:
-			return results[i].Metadata()["imagePosition"].(int) < results[j].Metadata()["imagePosition"].(int)
+			return imagePosition1 < imagePosition2
 		}
 	})
 }
@@ -222,15 +258,22 @@ func SortComposefileImageParserResults(
 	t.Helper()
 
 	sort.Slice(results, func(i, j int) bool {
+		var (
+			path1            = results[i].Metadata()["path"].(string)
+			path2            = results[j].Metadata()["path"].(string)
+			serviceName1     = results[i].Metadata()["serviceName"].(string)
+			serviceName2     = results[j].Metadata()["serviceName"].(string)
+			servicePosition1 = results[i].Metadata()["servicePosition"].(int)
+			servicePosition2 = results[j].Metadata()["servicePosition"].(int)
+		)
+
 		switch {
-		case results[i].Metadata()["path"].(string) != results[j].Metadata()["path"].(string):
-			return results[i].Metadata()["path"].(string) < results[j].Metadata()["path"].(string)
-		case results[i].Metadata()["serviceName"].(string) != results[j].Metadata()["serviceName"].(string):
-			return results[i].Metadata()["serviceName"].(string) < results[j].Metadata()["serviceName"].(string)
-		case results[i].Metadata()["dockerfilePath"].(string) != results[j].Metadata()["dockerfilePath"].(string):
-			return results[i].Metadata()["dockerfilePath"].(string) < results[j].Metadata()["dockerfilePath"].(string)
+		case path1 != path2:
+			return path1 < path2
+		case serviceName1 != serviceName2:
+			return serviceName1 < serviceName2
 		default:
-			return results[i].Metadata()["servicePosition"].(int) < results[j].Metadata()["servicePosition"].(int)
+			return servicePosition1 < servicePosition2
 		}
 	})
 }
